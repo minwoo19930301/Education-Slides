@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 브라우저 & 에이전트 클래스 - 김민우 T</title>
+  
+  <!-- Font Setup: Outfit (Numbers/English) & Inter & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Canvas Confetti for quizzes/celebrations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(31, 41, 55, 0.8);
+      --border-color: rgba(255, 255, 255, 0.08);
+      
+      --color-primary: #38bdf8; /* Cyan */
+      --color-secondary: #a855f7; /* Purple */
+      --color-accent: #f43f5e; /* Rose */
+      --color-success: #10b981; /* Emerald */
+      
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font-english: 'Outfit', 'Inter', sans-serif;
+      --font-korean: 'Noto Sans KR', sans-serif;
+      
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-korean);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Background Neon Orbs */
+    .bg-orbs {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(150px);
+      opacity: 0.15;
+    }
+
+    .orb-1 {
+      top: -10%;
+      left: -10%;
+      width: 50vw;
+      height: 50vw;
+      background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+      animation: orbFloat 25s infinite alternate;
+    }
+
+    .orb-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+      animation: orbFloat 30s infinite alternate-reverse;
+    }
+
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(5%, 5%) scale(1.1); }
+    }
+
+    /* Grid Overlay */
+    .bg-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Presentation Layout */
+    .deck-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    /* Individual Slide Structure */
+    .slide {
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
+      height: 100%;
+      padding: 60px 80px 80px 80px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+    }
+
+    .slide-title-area {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .slide-subtitle {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 600;
+      font-family: var(--font-english);
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+
+    .slide-badge {
+      font-family: var(--font-english);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 99px;
+      letter-spacing: 1px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .badge-part1 {
+      border-color: rgba(56, 189, 248, 0.3);
+      color: var(--color-primary);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+    }
+
+    .badge-part2 {
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--color-secondary);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+    }
+
+    .badge-part3 {
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--color-accent);
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.1);
+    }
+
+    /* Slide Body Layouts */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .slide-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .slide-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+    }
+
+    .layout-2col {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .layout-2col.equal {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Cards & Glassmorphism */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+    }
+
+    /* Bullets & Text styling */
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .bullet-list li {
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .bullet-list li i {
+      margin-top: 5px;
+      font-size: 1.1rem;
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    .bullet-list.part2 li i {
+      color: var(--color-secondary);
+    }
+
+    .bullet-list.part3 li i {
+      color: var(--color-accent);
+    }
+
+    .bullet-list li strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .teacher-tag {
+      font-weight: 700;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+
+    /* Navigation Toolbar */
+    .presenter-toolbar {
+      background: rgba(9, 13, 22, 0.85);
+      border-top: 1px solid var(--border-color);
+      padding: 12px 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .toolbar-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .toolbar-btn.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* Progress bar */
+    .progress-bar-container {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary), var(--color-accent));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Sidebar drawer */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 320px;
+      height: 100%;
+      background: #0b0f19;
+      border-right: 1px solid var(--border-color);
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      padding: 25px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .sidebar-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .sidebar-item {
+      padding: 12px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: var(--transition-smooth);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid transparent;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+
+    .sidebar-item.active {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    .sidebar-item-sec2.active {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--color-secondary);
+    }
+
+    .sidebar-item-sec3.active {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--color-accent);
+    }
+
+    .sidebar-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Specific elements styling */
+    .title-slide-layout {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    .title-super {
+      font-family: var(--font-english);
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      color: var(--color-primary);
+    }
+
+    .title-main {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 30px;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-author {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      border-left: 3px solid var(--color-primary);
+      padding-left: 20px;
+    }
+
+    /* Grid for AI Evolution Steps */
+    .evolution-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 20px;
+      height: 100%;
+    }
+
+    .evolution-step {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .evolution-step:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .evolution-step.highlight {
+      background: rgba(56, 189, 248, 0.04);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.1);
+    }
+
+    .evolution-step.sec2-highlight {
+      background: rgba(168, 85, 247, 0.04);
+      border-color: var(--color-secondary);
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.1);
+    }
+
+    .evolution-step.disabled {
+      opacity: 0.4;
+    }
+
+    .step-num {
+      font-family: var(--font-english);
+      font-size: 2rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.15);
+      line-height: 1;
+    }
+
+    .evolution-step.highlight .step-num {
+      color: var(--color-primary);
+    }
+
+    .evolution-step.sec2-highlight .step-num {
+      color: var(--color-secondary);
+    }
+
+    .step-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .step-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Interactive Battle Simulator */
+    .battle-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .battle-column {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .battle-header {
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #374151;
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--color-primary);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .battle-btn {
+      grid-column: 1 / span 2;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      color: white;
+      font-weight: 700;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      transition: var(--transition-smooth);
+    }
+
+    .battle-btn:hover {
+      opacity: 0.9;
+    }
+
+    .battle-result-terminal {
+      grid-column: 1 / span 2;
+      background: #030712;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: var(--font-english);
+      font-size: 0.85rem;
+      min-height: 100px;
+      max-height: 140px;
+      overflow-y: auto;
+      color: #34d399;
+    }
+
+    /* Interactive Quiz Widget */
+    .quiz-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+    }
+
+    .quiz-option {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 24px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 500;
+      transition: var(--transition-smooth);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .quiz-option:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .quiz-option.correct {
+      background: rgba(16, 185, 129, 0.15) !important;
+      border-color: var(--color-success) !important;
+      color: #34d399;
+    }
+
+    .quiz-option.wrong {
+      background: rgba(244, 63, 94, 0.15) !important;
+      border-color: var(--color-accent) !important;
+      color: #fda4af;
+    }
+
+    .quiz-feedback {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 10px;
+      min-height: 24px;
+    }
+
+    /* Python terminal display */
+    .code-terminal {
+      background: #030712;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    /* View Transitions slide animation fallback */
+    @keyframes slideInRight {
+      from { transform: translateX(50px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideInLeft {
+      from { transform: translateX(-50px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .slide-in-right {
+      animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide-in-left {
+      animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Agent execution visualizer */
+    .agent-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .agent-step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid transparent;
+      transition: var(--transition-smooth);
+    }
+
+    .agent-step-item.active {
+      color: var(--color-primary);
+      background: rgba(56, 189, 248, 0.05);
+      border-color: rgba(56, 189, 248, 0.2);
+    }
+
+    .agent-step-item.completed {
+      color: var(--color-success);
+    }
+
+    .circle-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+    }
+
+    .active .circle-icon {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+    }
+
+    .completed .circle-icon {
+      border-color: var(--color-success);
+      background: var(--color-success);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Layer -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+  <div class="bg-grid"></div>
+
+  <!-- Sidebar Jump Menu -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">전체 슬라이드 목록</h2>
+      <button class="sidebar-close" id="sidebar-close-btn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <nav class="sidebar-list" id="sidebar-list">
+      <!-- Generated by JS -->
+    </nav>
+  </aside>
+
+  <!-- Slide Deck Main Container -->
+  <main class="deck-container">
+    <div class="slide-wrapper" id="slide-wrapper">
+
+      <!-- SLIDE 1: Title -->
+      <section class="slide active" data-title="시작" data-session="1">
+        <div class="title-slide-layout">
+          <div class="title-super">Creative Agent Lecture</div>
+          <h1 class="title-main">웹을 자동으로 조종해버릴 수 있는 시대까지<br>열어버린 AI 브라우저</h1>
+          <div class="title-author">
+            Tech 본부 / Pricing Tech Engineering팀<br>
+            <strong>김민우 T (Minwoo Kim)</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Previews -->
+      <section class="slide" data-title="미리보기 예시" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">AI 브라우저 활용의 첫 걸음</span>
+            <h2 class="slide-title">우리가 오늘 배울 것들의 미리보기</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h3 style="font-size: 1.4rem; color: var(--color-primary);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI 브라우저의 힘</h3>
+            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-muted);">
+              컴퓨터 화면 속 웹페이지를 직접 읽고, 사람처럼 클릭하고, 정보를 모으고, 로그인이나 회원가입을 <strong>스스로 알아서 수행하는 자율형 브라우징 에이전트</strong>의 시대를 경험해 봅니다.
+            </p>
+          </div>
+          <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px; border-color: rgba(168, 85, 247, 0.3);">
+            <h3 style="font-size: 1.4rem; color: var(--color-secondary);"><i class="fa-solid fa-gamepad"></i> 주요 시뮬레이션 및 실습</h3>
+            <ul class="bullet-list part2" style="font-size: 1.05rem;">
+              <li><i class="fa-solid fa-shield-halved"></i> <span><strong>크롤링 봇 vs 서버 방어</strong> 인터랙티브 시뮬레이션 게임</span></li>
+              <li><i class="fa-solid fa-robot"></i> <span><strong>AI 에이전트 터미널</strong> 작동 과정 실시간 체험</span></li>
+              <li><i class="fa-solid fa-lightbulb"></i> <span><strong>Comet AI 브라우저</strong>의 핵심 기능 및 퀴즈 실습</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: AI Evolution Overview -->
+      <section class="slide" data-title="AI 발전 단계 개요" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">AI 기술의 거대한 진화 단계</span>
+            <h2 class="slide-title">인공지능(AI) 발전의 6가지 핵심 단계</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body">
+          <div class="evolution-grid">
+            <div class="evolution-step">
+              <span class="step-num">01</span>
+              <h3 class="step-title">인지형 AI</h3>
+              <p class="step-desc">단순 규칙을 기반으로 응답하고 상태를 감지합니다 (예: 옛날 챗봇 심심이).</p>
+            </div>
+            <div class="evolution-step">
+              <span class="step-num">02</span>
+              <h3 class="step-title">생성형 AI</h3>
+              <p class="step-desc">다양한 규칙을 조합하여 새로운 텍스트, 이미지, 영상을 창조합니다 (예: ChatGPT 초기).</p>
+            </div>
+            <div class="evolution-step">
+              <span class="step-num">03</span>
+              <h3 class="step-title">RAG (검색 연동형)</h3>
+              <p class="step-desc">실시간 검색 API와 연동해 최신 데이터를 즉시 조회하고 답변합니다.</p>
+            </div>
+            <div class="evolution-step">
+              <span class="step-num">04</span>
+              <h3 class="step-title">MCP & Function Calling</h3>
+              <p class="step-desc">정보를 읽을 뿐 아니라, API나 로컬 기능을 호출하여 시스템에 직접 명령을 씁니다.</p>
+            </div>
+            <div class="evolution-step highlight">
+              <span class="step-num">05</span>
+              <h3 class="step-title">AI 에이전트</h3>
+              <p class="step-desc">사람의 명확한 가이드 없이 다단계 목표를 자율적으로 계획하고, 스스로 웹 브라우저를 띄워 행동합니다.</p>
+            </div>
+            <div class="evolution-step">
+              <span class="step-num">06</span>
+              <h3 class="step-title">물리적 에이전트</h3>
+              <p class="step-desc">인터넷 가상 환경을 벗어나, 현실 물리 세계에서 로봇의 몸으로 미션을 수행합니다 (예: Tesla Optimus).</p>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: Cognitive AI (1) -->
+      <section class="slide" data-title="1단계: 인지형 AI" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">01. 인지형 AI</span>
+            <h2 class="slide-title">규칙 기반의 클래식 챗봇, 심심이</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>단순 규칙 선택</strong>: 사용자가 던지는 질문에 따라 미리 정해진 데이터베이스 속 매칭 답변을 꺼내오는 원리입니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>인지 및 단순 상태 감지</strong>: 지능을 갖고 깊게 사유하기보다는 패턴 매칭에 가깝습니다.</span></li>
+              <li><i class="fa-solid fa-message"></i> <span>대표 주자: <strong>심심이(SimSimi)</strong>처럼 옛날에 가지고 놀던 대화형 서비스가 대표적인 예입니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="text-align: center; background: rgba(0, 0, 0, 0.4); border-color: rgba(56, 189, 248, 0.2);">
+            <div style="font-size: 5rem; color: #facc15; margin-bottom: 20px;"><i class="fa-regular fa-face-smile"></i></div>
+            <h4 style="font-size: 1.2rem; color: #facc15; margin-bottom: 10px;">"사이다 사와" &rarr; "얼만대요?"</h4>
+            <p style="font-size: 0.95rem; color: var(--text-muted);">미리 매칭된 대화 데이터베이스를 통해 빠르게 주고받던 형태</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: Generative AI (2) -->
+      <section class="slide" data-title="2단계: 생성형 AI" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">02. 생성형 AI</span>
+            <h2 class="slide-title">데이터를 이해하고 스스로 조합하는 AI</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>규칙 조합 후 새로운 창조</strong>: 단순 정답 매칭을 넘어, 수많은 단어의 연결 확률을 이해해 문맥에 맞춰 답변을 창조합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>텍스트, 이미지, 오디오, 영상 생성</strong>: 인간이 텍스트(프롬프트)로 상상하는 내용을 바로 가상 파일로 표현해 줍니다.</span></li>
+              <li><i class="fa-solid fa-circle-play"></i> <span>초기 **ChatGPT(GPT-3.5)**와 이미지 생성 모델들이 세상을 흔들었던 시기입니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(168, 85, 247, 0.2); background: rgba(168, 85, 247, 0.02);">
+            <h4 style="color: var(--color-secondary); font-size: 1.1rem; margin-bottom: 15px;"><i class="fa-solid fa-brain"></i> 인간형 독창성 모방</h4>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              "디자이너를 사용해 4행시 지어줘"<br>
+              디: 디자인 수정해주세요<br>
+              자: 자간 수정해주세요<br>
+              이: 이것 좀 수정해주세요<br>
+              너: 너무 많이 바꿨네요, 그냥 원래대로 돌려주세요...
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: RAG (3) -->
+      <section class="slide" data-title="3단계: RAG (검색 연동)" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">03. Retrieval-Augmented Generation</span>
+            <h2 class="slide-title">실시간 외부 검색과 결합된 인공지능</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>검색 API 사용</strong>: AI 자체 지식(학습된 시점)에 없는 최신 주식 시세나 어제 경기 결과를 검색을 통해 파악합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>실시간 데이터 조회</strong>: 검색 결과를 실시간 요약해 최신 팩트에 기반한 올바른 답변을 전달합니다.</span></li>
+              <li><i class="fa-solid fa-search"></i> <span><strong>ChatGPT Web Search 기능</strong>이나 **Microsoft Bing Copilot** 탑재 당시에 널리 알려졌습니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(16, 185, 129, 0.2); display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 8px;">
+              <i class="fa-solid fa-globe" style="color: var(--color-success);"></i>
+              <span style="font-size: 0.9rem;">Web Search 활성화됨</span>
+            </div>
+            <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+              "오늘 테슬라 주가 알려줘"<br>
+              &rarr; AI가 직접 네이버/구글 검색 후 주가 수집 &rarr; 최신 정보로 요약하여 답변
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: MCP Server (4) -->
+      <section class="slide" data-title="4단계: MCP 서버 & 기능 호출" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">04. Model Context Protocol & Function Calling</span>
+            <h2 class="slide-title">컴퓨터 및 시스템을 직접 제어하는 AI</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>기능 호출 (Function Calling)</strong>: AI가 문맥에 따라 다른 하드웨어나 API 기능 목록을 파악하고 실행을 명령합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>읽기(Read)뿐만 아니라 쓰기(Write)까지</strong>: 데이터베이스에 정보를 쓰거나 컴퓨터 안의 파일을 수정할 수 있는 실체적인 액션을 취합니다.</span></li>
+              <li><i class="fa-solid fa-terminal"></i> <span>최근 선풍적 인기를 끌고 있는 **OpenAI Functions** 및 **Claude Model Context Protocol (MCP)** 서버가 핵심 축입니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(0,0,0,0.3); padding: 25px;">
+            <div style="font-family: var(--font-english); font-size: 0.85rem; color: #a855f7; margin-bottom: 10px;">// MCP Server Action</div>
+            <div style="font-family: var(--font-english); font-size: 0.9rem; color: #ffffff;">
+              &gt; AI: "I need to learn kung fu."<br>
+              &gt; System: Connecting to matrix-brain...<br>
+              &gt; Action: Injecting kung-fu module...<br>
+              &gt; AI: "I know kung fu."
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: 8 MCP Servers -->
+      <section class="slide" data-title="대표적인 MCP 기능" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">MCP를 통한 강력한 확장 능력</span>
+            <h2 class="slide-title">인공지능에 장착할 수 있는 8개의 날개</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body">
+          <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 10px;">
+            이 프로토콜을 통하면 챗봇이 직접 다양한 도구들을 활용하여 개발자처럼 작동할 수 있습니다:
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-code" style="font-size: 1.8rem; color: var(--color-primary); margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">Jupyter</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">코드 연산 실행</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-brands fa-github" style="font-size: 1.8rem; color: #ffffff; margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">GitHub</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">코드 관리 & 저장</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-terminal" style="font-size: 1.8rem; color: var(--color-secondary); margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">CLI Command</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">로컬 시스템 제어</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-file-code" style="font-size: 1.8rem; color: var(--color-accent); margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">Executor</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Python 파일 연산</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-database" style="font-size: 1.8rem; color: var(--color-success); margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">Vector DB</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">의미론적 기억창고</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-eye" style="font-size: 1.8rem; color: #facc15; margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">Browser</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">인터넷 화면 보기</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-spider" style="font-size: 1.8rem; color: #fb923c; margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">Scraper</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">HTML 데이터 긁기</span>
+            </div>
+            <div class="card" style="padding: 15px; text-align: center;">
+              <i class="fa-solid fa-floppy-disk" style="font-size: 1.8rem; color: #a3a3a3; margin-bottom: 8px;"></i>
+              <h5 style="margin-bottom: 5px;">Memory</h5>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">이전 정보 장기기록</span>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: AI Agent (5) -->
+      <section class="slide" data-title="5단계: AI 에이전트" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">05. AI Agent</span>
+            <h2 class="slide-title">인터넷 가상 세계를 정복한 디지털 비서</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>다단계 목표 & 자율 행동</strong>: "이번 주 주말 날씨에 맞춰 한강 피크닉 일정을 구글 캘린더에 알아서 기록해줘"라는 한 문장에 따라 10개 이상의 웹 단계를 혼자 설계합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>미리 학습된 지식보다 현장 학습</strong>: 웹 브라우저를 스스로 띄우고 직접 기사를 읽거나 버튼을 누르며 실시간으로 문제를 해결합니다.</span></li>
+              <li><i class="fa-solid fa-window-restore"></i> <span>오늘 우리가 만나볼 **AI 브라우저(Comet)**가 대표적인 도구입니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(56, 189, 248, 0.2); background: rgba(56, 189, 248, 0.02); display: flex; flex-direction: column; justify-content: center; text-align: center; gap: 10px;">
+            <div style="font-size: 3rem; color: var(--color-primary);"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h4 style="font-size: 1.25rem;">"대신 일 좀 해줘"</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">사용자의 의도를 분석해 실제 웹 브라우저를 조종하는 AI 에이전트의 시대</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: Physical Agent (6) -->
+      <section class="slide" data-title="6단계: 물리적 에이전트" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">06. Physical Agent</span>
+            <h2 class="slide-title">현실 세계로 걸어나온 하드웨어 로봇</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>물리적 세계에서 직접 행동</strong>: 웹이나 컴퓨터 메모리 속 가상의 바이트 데이터를 처리하는 것을 넘어, 팔과 다리를 움직여 물리 문제를 해결합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>주변 상황의 실시간 모델링</strong>: 카메라 센서로 사물이나 위치를 인지하고 실시간 경로를 보정합니다.</span></li>
+              <li><i class="fa-solid fa-robot"></i> <span>대표 주자: <strong>Tesla Optimus</strong>, **Boston Dynamics**의 4족 보행 로봇 견 또는 휴머노이드 로봇이 이에 속합니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(168, 85, 247, 0.2); background: rgba(0, 0, 0, 0.4); text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+            <div style="font-size: 3rem; color: var(--color-secondary);"><i class="fa-solid fa-robot"></i></div>
+            <h4 style="font-size: 1.25rem;">물리적 모빌리티 결합</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">자율주행 자동차 및 휴머노이드 가사 로봇의 종착지</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: Realities of AI Progress (Analysis) -->
+      <section class="slide" data-title="기술 단계의 현실" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">AI 발전의 현실 분석</span>
+            <h2 class="slide-title">우리가 겪고 있는 기술 단계의 실제 현실</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card">
+            <h3 class="card-title" style="color: var(--color-primary);"><i class="fa-solid fa-circle-info"></i> 주요 현상 분석</h3>
+            <ul class="bullet-list" style="gap: 15px; font-size: 1rem;">
+              <li><i class="fa-solid fa-check"></i> <span><strong>RAG (3단계)</strong>: 현재 기업이나 상용 서비스의 <strong>대다수</strong>가 가장 편하게 구현하여 서비스하고 있습니다.</span></li>
+              <li><i class="fa-solid fa-xmark" style="color: var(--color-accent);"></i> <span><strong>MCP (4단계)</strong>: 시스템을 조작할 수 있으나 설정이나 연결이 대단히 **어려움**으로 분류됩니다.</span></li>
+              <li><i class="fa-solid fa-sack-dollar" style="color: #facc15;"></i> <span><strong>물리적 로봇 (6단계)</strong>: 현실을 움직이지만 하드웨어 단가가 너무 **비쌈**의 문제가 있습니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(168, 85, 247, 0.3); display: flex; flex-direction: column; justify-content: center; text-align: center; gap: 15px;">
+            <div style="font-size: 3rem; color: var(--color-secondary);"><i class="fa-solid fa-bullseye"></i></div>
+            <h3 style="font-size: 1.4rem;">최적의 절충지: 5단계 AI 에이전트</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              하드웨어 구매 비용 없이 기존 웹 환경에서 인간의 브라우징 행위를 대신하는 <strong>AI 브라우징 에이전트(Comet)</strong>가 가장 실용적이고 강력한 대안으로 주목받고 있습니다.
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: Highlight on AI Agent -->
+      <section class="slide" data-title="에이전트 단계 집중" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">05단계 자율 에이전트</span>
+            <h2 class="slide-title">왜 지금 'AI 에이전트'인가?</h2>
+          </div>
+          <span class="slide-badge badge-part1">Part 1</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list" style="gap: 20px;">
+              <li><i class="fa-solid fa-bolt"></i> <span><strong>스스로 판단하는 지능의 구현</strong>: 사전에 설계된 시나리오가 없어도 AI 스스로 '목표 달성을 위한 하위 테스크'를 작성합니다.</span></li>
+              <li><i class="fa-solid fa-arrows-spin"></i> <span><strong>순환적 피드백 루프</strong>: 웹 서핑 중 예상 못한 팝업이 나타나면 이를 분석하고 팝업을 '닫기' 처리한 뒤 원래 테스크로 돌아갑니다.</span></li>
+              <li><i class="fa-solid fa-desktop"></i> <span>화면을 직접 쳐다보며(Computer Vision) 마우스 클릭 좌표를 계산하는 수준까지 급속도로 발달하고 있습니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="background: #030712; border-color: rgba(255, 255, 255, 0.05); padding: 20px;">
+            <div class="agent-steps">
+              <div class="agent-step-item completed">
+                <div class="circle-icon"><i class="fa-solid fa-check"></i></div>
+                <span>목표: 지마켓에서 안성탕면 최저가 찾아 장바구니 넣기</span>
+              </div>
+              <div class="agent-step-item completed">
+                <div class="circle-icon"><i class="fa-solid fa-check"></i></div>
+                <span>1단계: gmarket.co.kr 접속 완료 (200 OK)</span>
+              </div>
+              <div class="agent-step-item active">
+                <div class="circle-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                <span>2단계: 검색창 감지 후 '안성탕면' 타이핑 중...</span>
+              </div>
+              <div class="agent-step-item">
+                <div class="circle-icon">3</div>
+                <span>3단계: 가격 정보 파싱 및 최저가 식별</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 13: Quiz 1 -->
+      <section class="slide" data-title="퀴즈 1" data-session="1">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">실시간 깜짝 퀴즈 (Pop Quiz)</span>
+            <h2 class="slide-title">Perplexity에서 공개한 독자적 AI 브라우저의 이름은?</h2>
+          </div>
+          <span class="slide-badge badge-part1">QUIZ</span>
+        </div>
+        <div class="slide-body">
+          <div class="quiz-container" id="quiz-1">
+            <div class="quiz-option" data-correct="false">1. Astro (아스트로)</div>
+            <div class="quiz-option" data-correct="false">2. Perplex Browser (퍼플렉스 브라우저)</div>
+            <div class="quiz-option" data-correct="true">3. Comet (코멧)</div>
+            <div class="quiz-option" data-correct="false">4. Chrome Agent (크롬 에이전트)</div>
+            <div class="quiz-feedback" id="quiz-1-feedback"></div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>정답을 클릭하면 즉시 폭죽이 터집니다!</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 14: How AI Gathers Information -->
+      <section class="slide" data-title="AI의 정보 수집 방법" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Part 2: 웹 정보 수집과 크롤링</span>
+            <h2 class="slide-title">인공지능은 우리가 만든 웹사이트를 어떻게 읽을까요?</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h3 style="font-size: 1.3rem; color: var(--color-secondary);"><i class="fa-solid fa-network-wired"></i> 정보 수집의 기본 흐름</h3>
+            <p style="font-size: 1.05rem; line-height: 1.6; color: var(--text-muted);">
+              챗봇이나 에이전트가 어떤 지식에 답하기 위해서는 반드시 웹 상에 흩어진 문서(HTML)를 읽어와야 합니다. 
+              일반적으로 **클라이언트 &larr; Request &rarr; 서버** 단계를 통해 정보를 주고받습니다.
+            </p>
+          </div>
+          <div class="card" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.05); padding: 25px; display: flex; flex-direction: column; justify-content: center;">
+            <h4 style="font-size: 1.1rem; color: #ffffff; margin-bottom: 15px;"><i class="fa-solid fa-diagram-project"></i> 4단계 데이터 획득망</h4>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-family: var(--font-english); font-size: 0.9rem;">
+              <div style="background: rgba(56, 189, 248, 0.1); padding: 8px; border-radius: 6px; border-left: 3px solid var(--color-primary);">1. User (의도 입력)</div>
+              <div style="background: rgba(168, 85, 247, 0.1); padding: 8px; border-radius: 6px; border-left: 3px solid var(--color-secondary);">2. AI Model (웹 탐색 명령 생성)</div>
+              <div style="background: rgba(244, 63, 94, 0.1); padding: 8px; border-radius: 6px; border-left: 3px solid var(--color-accent);">3. Scraper Bot (HTML 파일 수집)</div>
+              <div style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 6px; border-left: 3px solid var(--color-success);">4. Database (데이터 파싱 및 적재)</div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 15: How Web Works -->
+      <section class="slide" data-title="웹 동작 원리" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">웹 정보 전달 구조</span>
+            <h2 class="slide-title">우리가 브라우저를 열 때 일어나는 일</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>클라이언트(Client)</strong>: 사용자의 크롬 브라우저가 서버에 "지마켓 페이지 보여줘" 하고 **요청(Request)**합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>웹 서버(Web Server)</strong>: 요청을 받으면 데이터베이스에서 라면 가격 정보를 꺼내옵니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>응답(Response)</strong>: 가격 정보가 들어간 완성된 **HTML/CSS/JS 코드**를 클라이언트 브라우저로 쏴 줍니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="text-align: center; border-color: rgba(168, 85, 247, 0.2); background: rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+            <div style="display: flex; justify-content: space-around; font-size: 2.2rem; color: var(--color-secondary);">
+              <i class="fa-solid fa-laptop"></i>
+              <i class="fa-solid fa-arrows-h"></i>
+              <i class="fa-solid fa-server"></i>
+            </div>
+            <div style="font-size: 0.95rem; font-weight: 700; margin-top: 10px;">Request &rarr; Response</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">사용자의 브라우저와 원격 데이터 센터 간의 끊임없는 요청과 답변</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 16: Detailed Web Collection -->
+      <section class="slide" data-title="웹 정보 수집 상세" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">다양한 기기의 수집 환경</span>
+            <h2 class="slide-title">PC, 모바일, 그리고 자동화 스크립트</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card">
+            <h3 class="card-title" style="color: var(--color-secondary);"><i class="fa-solid fa-computer"></i> 기기별 수집 환경</h3>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 15px;">
+              서버는 들어오는 요청이 일반 PC 스마트폰 브라우저인지, 아니면 자동으로 정보를 긁어가는 파이썬 코드봇인지 <strong>User-Agent(기기 정보 헤더)</strong>를 확인해 판별합니다.
+            </p>
+            <div style="font-family: var(--font-english); font-size: 0.75rem; background: #030712; padding: 10px; border-radius: 6px; color: var(--color-primary); border: 1px solid rgba(255,255,255,0.05);">
+              User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
+            </div>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h4 style="font-size: 1.25rem;"><i class="fa-solid fa-network-wired"></i> 인프라 구조</h4>
+            <ul class="bullet-list part2" style="font-size: 0.95rem; gap: 10px;">
+              <li><i class="fa-solid fa-server"></i> <span><strong>클라우드 서버</strong>: 초당 수만 개의 네트워크 세션을 처리합니다.</span></li>
+              <li><i class="fa-solid fa-database"></i> <span><strong>데이터베이스</strong>: 정형화된 제품 가격, 재고 목록을 안전히 보관합니다.</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 17: Crawling (Bot) -->
+      <section class="slide" data-title="크롤링이란?" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">웹 크롤링 (Web Crawling)</span>
+            <h2 class="slide-title">자동으로 데이터를 수집하는 봇(Bot)의 탄생</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>크롤러 / 봇 (Bot)</strong>: 사람이 눈으로 웹을 하나하나 클릭해 복사하는 대신, 코드가 초당 수백 수천 개의 웹페이지를 돌며 텍스트를 통째로 긁어옵니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>검색 엔진의 뼈대</strong>: 구글이나 네이버 같은 포털 사이트는 매 순간 크롤러를 돌려 전 세계 웹페이지를 수집해 검색창에 띄워줍니다.</span></li>
+              <li><i class="fa-solid fa-circle-info"></i> <span>최신 AI 챗봇(ChatGPT, Gemini) 역시 이 크롤러 봇을 사용해 공부를 하고 답변 재료를 구합니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="background: rgba(0, 0, 0, 0.4); text-align: center; border-color: rgba(168, 85, 247, 0.2); display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <div style="font-size: 4rem; color: var(--color-secondary);"><i class="fa-solid fa-robot"></i></div>
+            <h4 style="font-size: 1.2rem;">웹 크롤러 봇 (Crawler Bot)</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">전 세계 인터넷 링크를 끊임없이 타고 넘어가며 정보를 수집</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 18 & 19: AI Bot Traffic -->
+      <section class="slide" data-title="AI 봇 트래픽 현황" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">AI Bots by Cloudflare Radar</span>
+            <h2 class="slide-title">전 세계 웹을 휩쓸고 있는 AI 봇들의 흔적</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 20px;">
+              클라우드플레어 레이더(Cloudflare Radar) 보고서에 따르면, 매 순간 전 세계 웹 트래픽 중 상당 부분이 AI 기업들의 학습 및 라이브 검색 봇에 의해 발생합니다:
+            </p>
+            <ul class="bullet-list part2" style="gap: 15px; font-size: 1rem;">
+              <li><i class="fa-solid fa-shield-halved"></i> <span><strong>ClaudeBot (Anthropic)</strong>: 전체 AI 봇 트래픽 중 약 <strong>31%</strong> 차지</span></li>
+              <li><i class="fa-solid fa-shield-halved"></i> <span><strong>GPTBot (OpenAI)</strong>: 전체 AI 봇 트래픽 중 약 <strong>24%</strong> 차지</span></li>
+              <li><i class="fa-solid fa-shield-halved"></i> <span>그 외 Meta-ExternalAgent(15%), Amazonbot(12%) 등이 활발히 수집 중</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); display: flex; flex-direction: column; justify-content: center; gap: 10px; background: rgba(0,0,0,0.3);">
+            <h4 style="font-size: 1.1rem; color: #ffffff;"><i class="fa-solid fa-chart-pie"></i> 주요 AI 봇 점유율</h4>
+            <div style="display: flex; height: 35px; border-radius: 6px; overflow: hidden; font-family: var(--font-english); font-size: 0.75rem; font-weight: 700; text-align: center; line-height: 35px;">
+              <div style="width: 31%; background: #38bdf8; color: #000;">Claude 31%</div>
+              <div style="width: 24%; background: #a855f7; color: #fff;">GPT 24%</div>
+              <div style="width: 15%; background: #f43f5e; color: #fff;">Meta 15%</div>
+              <div style="width: 30%; background: #4b5563; color: #fff;">기타 30%</div>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">* Cloudflare Radar 실시간 통계 기준</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 20: Gmarket Price Inspect -->
+      <section class="slide" data-title="실제 웹 가격 구조" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">크롤링 실습 기초</span>
+            <h2 class="slide-title">쇼핑몰 웹페이지 속 가격 정보의 형태</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>HTML 태그로 감싸진 가격</strong>: 웹 화면에 <code>16,900원</code>으로 보이는 글자는 HTML 상에서 특정 클래스나 아이디를 갖는 태그에 들어있습니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>셀렉터(Selector)</strong>: 크롤링을 위해선 <code>#itemcase_basic .price_value</code>와 같은 HTML 경로(Selector)를 찾아 코딩해야 합니다.</span></li>
+              <li><i class="fa-solid fa-magnifying-glass"></i> <span>마우스 우클릭 &rarr; **검사(Inspect)**를 통해 이 셀렉터 주소를 획득하는 것이 크롤링의 시작입니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="font-family: var(--font-english); font-size: 0.85rem; background: #030712; border-color: rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+            <div style="color: #64748b;">&lt;!-- HTML 가격 표시 예시 --&gt;</div>
+            <div style="color: #cbd5e1;">&lt;<span style="color: #f43f5e;">div</span> <span style="color: #facc15;">class</span>=<span style="color: #38bdf8;">"price_container"</span>&gt;</div>
+            <div style="color: #cbd5e1;">&nbsp;&nbsp;&lt;<span style="color: #f43f5e;">span</span> <span style="color: #facc15;">class</span>=<span style="color: #38bdf8;">"price_value"</span> <span style="color: #facc15;">id</span>=<span style="color: #38bdf8;">"ramen-price"</span>&gt;<span style="color: #10b981; font-weight: 700;">16,900</span>&lt;/<span style="color: #f43f5e;">span</span>&gt;</div>
+            <div style="color: #cbd5e1;">&nbsp;&nbsp;&lt;<span style="color: #f43f5e;">span</span> <span style="color: #facc15;">class</span>=<span style="color: #38bdf8;">"unit"</span>&gt;원&lt;/<span style="color: #f43f5e;">span</span>&gt;</div>
+            <div style="color: #cbd5e1;">&lt;/<span style="color: #f43f5e;">div</span>&gt;</div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 21: Static Crawling Code -->
+      <section class="slide" data-title="정적 크롤링 파이썬 코드" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">BeautifulSoup 라이브러리 사용</span>
+            <h2 class="slide-title">정적 크롤링(Static Crawling)의 구현 예시</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body">
+          <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 10px;">
+            파이썬의 <code>requests</code>와 <code>BeautifulSoup</code>를 이용하면 몇 줄의 코드만으로 즉시 웹사이트를 다운로드해 가격을 출력할 수 있습니다:
+          </p>
+          <div class="code-terminal">
+            <span style="color: #f43f5e;">import</span> requests<br>
+            <span style="color: #f43f5e;">from</span> bs4 <span style="color: #f43f5e;">import</span> BeautifulSoup<br><br>
+            url = <span style="color: #38bdf8;">"https://item.gmarket.co.kr/Item?goodsCode=4070164350"</span><br>
+            headers = {<span style="color: #38bdf8;">"User-Agent"</span>: <span style="color: #38bdf8;">"Mozilla/5.0..."</span>}<br><br>
+            response = requests.get(url, headers=headers)<br>
+            soup = BeautifulSoup(response.text, <span style="color: #38bdf8;">"html.parser"</span>)<br>
+            price = soup.select_one(<span style="color: #38bdf8;">".price_real"</span>).text<br><br>
+            <span style="color: #f43f5e;">print</span>(<span style="color: #38bdf8;">f"안성탕면 가격: {price}"</span>)
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>정적 크롤링: 쉽고 빠르지만 자바스크립트 실행 화면은 가져오지 못합니다.</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 22: Limitations of AI Browser -->
+      <section class="slide" data-title="정보 수집의 현실적 한계" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">크롤링과 RAG의 현실적 충돌</span>
+            <h2 class="slide-title">인공지능 정보 수집에 도사린 한계와 벽</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card">
+            <h3 class="card-title" style="color: var(--color-secondary);"><i class="fa-solid fa-clock-rotate-left"></i> 1. 캐싱(Caching) 데이터의 한계</h3>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-muted);">
+              실시간으로 정보를 계속 긁어가면 서버가 공격으로 간주해 IP를 차단합니다. 
+              이 때문에 AI 서비스들은 어쩔 수 없이 <strong>과거에 미리 긁어 모아둔 캐시 데이터</strong>를 기반으로 답변할 때가 많아, 실시간 트렌드 확인에 한계가 있습니다.
+            </p>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.3);">
+            <h3 class="card-title" style="color: var(--color-accent);"><i class="fa-solid fa-lock"></i> 2. 보안 로그인과 실행 한계</h3>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 15px;">
+              정적 크롤링은 아이디/비밀번호가 필요한 로그인 장벽(Login Wall)을 넘지 못합니다.
+            </p>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-muted);">
+              또한 일반 봇들은 웹의 특정 동작(예: 장바구니 담기, 예약 결제)을 수행하지 못하고 오직 **조회만 가능**한 경우가 대다수입니다.
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 23: Crawler vs Server (Interactive Simulator) -->
+      <section class="slide" data-title="실습: 봇 vs 서버 전쟁" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">보이지 않는 전쟁 - 봇 vs 서버</span>
+            <h2 class="slide-title">크롤링 우회 전략과 서버 방어 기법 시뮬레이션</h2>
+          </div>
+          <span class="slide-badge badge-part2">BATTLE</span>
+        </div>
+        <div class="slide-body">
+          <div class="battle-container">
+            <div class="battle-column">
+              <div class="battle-header" style="color: var(--color-primary);">
+                <i class="fa-solid fa-spider"></i> 크롤링 봇 우회 전략
+              </div>
+              <div class="toggle-row">
+                <span>User-Agent 변조 (사람처럼 속이기)</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="cheat-ua">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <span>지연 대기시간 부여 (천천히 긁기)</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="cheat-delay">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <span>프록시 IP 우회 (여러 IP로 분산)</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="cheat-ip">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="battle-column">
+              <div class="battle-header" style="color: var(--color-accent);">
+                <i class="fa-solid fa-shield-halved"></i> 서버 보안 방어 기법
+              </div>
+              <div class="toggle-row">
+                <span>기본 UA 감지 차단</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="defend-ua" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <span>디바이스 당 속도 제한 (Rate Limit)</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="defend-rate">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <span>캡차 인증 발동 (CAPTCHA)</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="defend-captcha">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <button class="battle-btn" id="run-battle-btn">전쟁 시작! (Simulation)</button>
+
+            <div class="battle-result-terminal" id="battle-terminal">
+              &gt; 시뮬레이션을 돌려 봇이 차단당하는지 성공하는지 확인해 보세요.
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>옵션을 변경하며 봇의 우회 전략과 서버 방어 기법의 맞대결을 벌여보세요.</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 24: Dilemma of Crawler Attack -->
+      <section class="slide" data-title="크롤러 공격의 딜레마" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">봇 개발자의 딜레마</span>
+            <h2 class="slide-title">너무 격렬한 수집이 불러오는 파멸</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-circle-exclamation" style="color: var(--color-accent);"></i> <span><strong>상대 서버의 부하 가중</strong>: 봇이 아무 지연 대기시간 없이 초당 수만 개의 페이지를 긁어가면 타깃 사이트 서버가 다운됩니다 (의도치 않은 DDoS 테러).</span></li>
+              <li><i class="fa-solid fa-circle-exclamation" style="color: var(--color-accent);"></i> <span><strong>보안 강화 유도</strong>: 서버가 마비되면 해당 업체 보안팀이 즉시 경보를 발동해 강력한 캡차나 IP 대역 영구 차단을 먹입니다.</span></li>
+              <li><i class="fa-solid fa-circle-exclamation" style="color: var(--color-accent);"></i> <span>결국 크롤러 개발자는 더 코딩하기 힘든 우회 로직을 짜며 고통받는 무한 지옥에 빠집니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(244, 63, 94, 0.02); display: flex; flex-direction: column; justify-content: center; gap: 15px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--color-accent);"><i class="fa-solid fa-bomb"></i></div>
+            <h4 style="font-size: 1.25rem;">"정보가 필요할 뿐인데..."</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">
+              과도한 트래픽 유발로 서비스를 망치면 공들여 만든 크롤러가 전부 막히게 됩니다.
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 25: Dilemma of Server Defend (1) -->
+      <section class="slide" data-title="서버 방어의 딜레마" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">서버 보안의 딜레마 (1)</span>
+            <h2 class="slide-title">가장 안전한 보안이 손님을 내쫓는다?</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-triangle-exclamation" style="color: #facc15;"></i> <span><strong>진짜 유저를 차단하는 에러</strong>: 봇 트래픽을 세밀하게 감시하고 캡차를 사정없이 띄우면, 쇼핑몰에 물건을 사러 들어온 <strong>진짜 구매자들</strong>까지 불필요한 인증에 지쳐 이탈합니다.</span></li>
+              <li><i class="fa-solid fa-triangle-exclamation" style="color: #facc15;"></i> <span><strong>비정상 네트워크 판정</strong>: 카페 와이파이를 쓰던 일반 유저가 갑자기 '접속 제한 안내' 창을 마주하고 이탈해 매출 저하를 겪는 쇼핑몰이 대단히 많습니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(250, 204, 21, 0.2); background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center; gap: 10px; text-align: center;">
+            <div style="font-size: 3rem; color: #facc15;"><i class="fa-solid fa-user-slash"></i></div>
+            <h4 style="font-size: 1.25rem;">"안해 때려쳐!"</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">진짜 고객이 까다로운 캡차 단계와 접속 제한에 화를 내며 나가는 현상</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 26: Dilemma of Server Defend (2) -->
+      <section class="slide" data-title="홍보 노출 실패 딜레마" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">서버 보안의 딜레마 (2)</span>
+            <h2 class="slide-title">검색 광고와 AI가 나를 찾지 못할 때</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-triangle-exclamation" style="color: #facc15;"></i> <span><strong>AI 학습/답변에 미포함</strong>: 크롤링을 너무 강력하게 막아버리면 구글 검색이나 ChatGPT, Perplexity 등의 AI 봇도 그 쇼핑몰의 정보를 가져가지 못합니다.</span></li>
+              <li><i class="fa-solid fa-triangle-exclamation" style="color: #facc15;"></i> <span><strong>광고 효과 상실</strong>: 사람들이 AI 브라우저나 인공지능에 "신라면 가장 싸게 살 수 있는 링크 찾아줘"라고 물을 때 내 쇼핑몰만 정답 목록에서 지워져 <strong>매출 기회를 잃게 됩니다.</strong></span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(250, 204, 21, 0.2); display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h4 style="font-size: 1.15rem; color: #ffffff;"><i class="fa-solid fa-ban"></i> 노출 배제의 대가</h4>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              "실제로 크롤링 방어가 세계 최정상급인 네이버 스마트스토어나 쿠팡의 개별 상품 상세 정보는 해외 검색 엔진이나 ChatGPT의 웹 서칭 답변에서 빠지는 경향이 높습니다."
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 27: Minimum Defense -->
+      <section class="slide" data-title="최소한의 방어 전략" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">클라이언트 사이드 렌더링</span>
+            <h2 class="slide-title">기본 정적 크롤링을 가볍게 튕겨내는 방법</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>초기 HTML은 비워두기</strong>: 서버에서 내보낼 때는 <code>&lt;div id="price-data"&gt;&lt;/div&gt;</code> 처럼 데이터를 비운 껍데기만 보냅니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>JavaScript 후속 실행</strong>: 브라우저가 코드를 받은 뒤 내부 자바스크립트를 돌려 백엔드에 2차 요청을 하고 가격을 화면에 그리게 유도합니다.</span></li>
+              <li><i class="fa-solid fa-check"></i> <span>이러면 자바스크립트 해석 능력이 없는 <strong>단순 파이썬 봇들은 빈 페이지(No Data)만 보게 됩니다.</strong></span></li>
+            </ul>
+          </div>
+          <div class="card" style="font-family: var(--font-english); font-size: 0.85rem; background: #030712; border-color: rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+            <div style="color: #64748b;">// 정적 크롤러에게 보이는 모습</div>
+            <div style="color: #cbd5e1;">&lt;<span style="color: #f43f5e;">div</span> <span style="color: #facc15;">id</span>=<span style="color: #38bdf8;">"item-detail"</span>&gt;</div>
+            <div style="color: #cbd5e1;">&nbsp;&nbsp;&lt;<span style="color: #f43f5e;">span</span> <span style="color: #facc15;">id</span>=<span style="color: #38bdf8;">"price-display"</span>&gt;<span style="color: #f43f5e; font-weight: 700;">로딩 중... (데이터 없음)</span>&lt;/<span style="color: #f43f5e;">span</span>&gt;</div>
+            <div style="color: #cbd5e1;">&lt;/<span style="color: #f43f5e;">div</span>&gt;</div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 28: Dynamic Crawling (Selenium) -->
+      <section class="slide" data-title="동적 크롤링의 힘" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Selenium 및 Headless Browser</span>
+            <h2 class="slide-title">동적 크롤링: 가짜 브라우저를 띄워 행동하기</h2>
+          </div>
+          <span class="slide-badge badge-part2">Part 2</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part2" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>진짜 브라우저 조종</strong>: 백그라운드에 크롬 브라우저 프로세스를 실행시키고 자바스크립트 엔진을 완전히 활성화합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>클릭 및 스크롤 이벤트</strong>: 인간 개발자가 코드로 직접 "마우스 스크롤을 끝까지 내려라", "더보기 버튼을 클릭해라"고 조작합니다.</span></li>
+              <li><i class="fa-solid fa-circle-exclamation" style="color: var(--color-accent);"></i> <span>동적 크롤링 도구인 **Selenium**이나 **Playwright**를 활용하면 정보는 다 읽어올 수 있으나, 리소스 낭비가 심해 **실행 속도가 매우 느리다**는 단점이 있습니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(16, 185, 129, 0.2); background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center; gap: 12px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--color-success);"><i class="fa-brands fa-chrome"></i></div>
+            <h4 style="font-size: 1.2rem;">Headless Chrome 가동</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">파이썬 코드 뒤에서 실제로 켜지고 움직이는 투명 크롬 창</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 29 & 30: Quiz 2 -->
+      <section class="slide" data-title="퀴즈 2" data-session="2">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">실시간 깜짝 퀴즈 (Pop Quiz)</span>
+            <h2 class="slide-title">기존 AI 서비스들(ChatGPT, Gemini 등)이 실시간 정보를 확보하기 위해 외부 검색과 연동하여 답변하는 기술 이름은 무엇일까요?</h2>
+          </div>
+          <span class="slide-badge badge-part2">QUIZ</span>
+        </div>
+        <div class="slide-body">
+          <div class="quiz-container" id="quiz-2">
+            <div class="quiz-option" data-correct="false">1. CDN (Contents Delivery Network)</div>
+            <div class="quiz-option" data-correct="true">2. RAG (Retrieval-Augmented Generation)</div>
+            <div class="quiz-option" data-correct="false">3. OOP (Object-Oriented Programming)</div>
+            <div class="quiz-option" data-correct="false">4. SQL Injection (에스큐엘 인젝션)</div>
+            <div class="quiz-feedback" id="quiz-2-feedback"></div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>정답을 클릭하면 즉시 폭죽이 터집니다!</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 31: AI Browser Type 1 (Chrome Gemini) -->
+      <section class="slide" data-title="AI 브라우저 종류 1" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Part 3: AI 브라우저의 대두와 Comet</span>
+            <h2 class="slide-title">1. 브라우저 속으로 들어온 AI: Gemini in Chrome</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span>구글은 자사의 **크롬(Chrome)** 브라우저 우측 상단에 핵심 AI인 **Gemini 사이드패널**을 기본 탑재할 계획을 가동하고 있습니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>현재 웹페이지 분석</strong>: 내가 읽고 있는 영어 뉴스나 복잡한 보고서 PDF를 사이드바를 통해 한글로 즉시 요약하거나 질문하는 것이 가능해집니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(56, 189, 248, 0.2); background: rgba(56, 189, 248, 0.02); text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <div style="font-size: 3rem; color: var(--color-primary);"><i class="fa-brands fa-google"></i></div>
+            <h4 style="font-size: 1.2rem;">Gemini in Chrome</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">브라우저 주소창이나 우측 클릭 메뉴를 통해 Gemini의 브레인을 즉시 소환</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 32: AI Browser Type 2 (Operator) -->
+      <section class="slide" data-title="AI 브라우저 종류 2" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">2. OpenAI의 자율 대행 비서</span>
+            <h2 class="slide-title">2. ChatGPT 내부 가상 브라우저: Operator</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span>OpenAI가 정식 출시한 자율형 웹 에이전트 **Operator(오퍼레이터)**입니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>가상의 브라우저 가동</strong>: 챗창 안에서 백그라운드 브라우저를 직접 띄우고 인간이 원하는 검색, 예약, 정보 긁어오기를 대리 수행합니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span>수행 중간에 AI가 처리한 마우스 스크롤 위치와 클릭 지점, 화면 렌더링 과정을 영상 보듯 실시간으로 유저에게 보고해 줍니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(16, 185, 129, 0.2); background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center; gap: 10px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--color-success);"><i class="fa-solid fa-user-gear"></i></div>
+            <h4 style="font-size: 1.2rem;">ChatGPT Operator</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">"제주도 2박 3일 비행기 표 예매를 위해 여행사 사이트를 돌며 최저가 표를 찾아줘"</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 33: AI Browser Type 3 (Claude for Chrome) -->
+      <section class="slide" data-title="AI 브라우저 종류 3" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">3. 크롬 확장 프로그램형 AI</span>
+            <h2 class="slide-title">3. 모든 브라우저에 기생하는 지능: Claude for Chrome</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 25px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span>Anthropic에서 배포한 **크롬 확장 프로그램(Chrome Extension)** 형태입니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span>크롬뿐 아니라 웨일, 엣지, 브레이브 등 <strong>Chromium 기반 모든 브라우저</strong>에 추가 기능 형태로 설치하여 바로 소환할 수 있습니다.</span></li>
+              <li><i class="fa-solid fa-check"></i> <span>화면 스크린샷 캡처 및 DOM 분석을 연계하여 이메일 답장이나 일정 예약을 기가 막히게 지원합니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(168, 85, 247, 0.2); background: rgba(168, 85, 247, 0.02); text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <div style="font-size: 3rem; color: var(--color-secondary);"><i class="fa-brands fa-chrome"></i></div>
+            <h4 style="font-size: 1.2rem;">Chrome Extension Type</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">어떤 탭을 열고 작업하든 사이드바에서 내 업무 화면을 같이 쳐다보며 어시스트</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 34: AI Browser Type 4 (Comet) -->
+      <section class="slide" data-title="AI 브라우저 종류 4: Comet" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">4. Perplexity가 만든 최초의 독자 브라우저</span>
+            <h2 class="slide-title">4. Chromium 기반 자율 브라우저: Comet</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 20px;">
+              <li><i class="fa-solid fa-arrow-right"></i> <span>AI 검색 엔진 명가인 **Perplexity(퍼플렉시티)**가 Chromium 오픈소스를 베이스로 밑바닥부터 빌드한 독자적인 AI 웹 브라우저입니다.</span></li>
+              <li><i class="fa-solid fa-arrow-right"></i> <span><strong>'어시스턴트(Assistant)' 기능 기본 장착</strong>: 일반 검색 결과 요약은 물론, 브라우저가 탭을 스스로 제어하고 주소창을 활용해 여러 도메인을 알아서 종횡무진합니다.</span></li>
+              <li><i class="fa-solid fa-check"></i> <span>이메일, 카카오톡 작성 등의 인간 업무 패턴을 학습해 대신 브라우저 폼을 채워주는 특화 기능을 제공합니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center; gap: 12px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--color-accent);"><i class="fa-solid fa-meteor"></i></div>
+            <h4 style="font-size: 1.25rem;">Comet Browser</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">구글 크롬처럼 독립된 설치형 소프트웨어로 작동하며, AI 에이전트를 시스템의 메인 브레인으로 활용</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 35 - 39: Comet Examples (Interactive Steps) -->
+      <section class="slide" data-title="Comet 사용 예제" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Comet 실전 비즈니스 케이스</span>
+            <h2 class="slide-title">자율 AI 브라우저 Comet이 해결하는 5가지 실전 업무</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 15px; font-size: 1.05rem;">
+              <li><i class="fa-solid fa-play"></i> <span><strong>1. 유튜브 채널 구독</strong>: 특정 키워드의 유튜브 채널을 직접 검색하고 '구독' 버튼을 클릭해 줍니다.</span></li>
+              <li><i class="fa-solid fa-play"></i> <span><strong>2. 음성 요약</strong>: "음성으로 명령"하면 현재 열려 있는 탭의 긴 텍스트를 목소리로 답하며 핵심을 요약합니다.</span></li>
+              <li><i class="fa-solid fa-play"></i> <span><strong>3. 가입 및 정보 대리 입력</strong>: 내 기본 프로필을 바탕으로 복잡한 쇼핑몰 회원가입 폼을 일괄 자동 완성합니다.</span></li>
+              <li><i class="fa-solid fa-play"></i> <span><strong>4. 생소한 사이트 탐색</strong>: 처음 보는 정부 민원 사이트에서도 자율적으로 링크 구조를 타서 원하는 서식을 다운로드합니다.</span></li>
+              <li><i class="fa-solid fa-play"></i> <span><strong>5. 티켓팅 자동 대기</strong>: 특정 콘서트 예매 사이트의 링크를 대기타다가 타임에 맞춰 자리를 픽해 줍니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(168, 85, 247, 0.3); display: flex; flex-direction: column; justify-content: center; gap: 15px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--color-secondary);"><i class="fa-solid fa-bolt"></i></div>
+            <h3 style="font-size: 1.3rem;">비즈니스 프로세스의 자동화</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              반복적이고 규칙적인 인간의 마우스 클릭과 자판 입력을 인공지능이 눈을 뜨고 대신함으로써 엄청난 업무 생산성 혁신이 일어납니다.
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 40: Critical Limitation of AI Browser -->
+      <section class="slide" data-title="AI 브라우저의 치명적 한계" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">보안의 벽과 한계</span>
+            <h2 class="slide-title">AI 브라우저도 정복하지 못한 사각지대</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 20px;">
+              <li><i class="fa-solid fa-circle-exclamation" style="color: var(--color-accent);"></i> <span><strong>HTML 외부 영역 조작 불가</strong>: AI 에이전트는 웹페이지 코드(HTML DOM) 속에 들어가 폼을 입력하고 읽지만, 브라우저 바깥의 **운영체제(OS) 윈도우 창**은 다루지 못합니다.</span></li>
+              <li><i class="fa-solid fa-circle-exclamation" style="color: var(--color-accent);"></i> <span><strong>alert() 창에 무력화</strong>: 브라우저가 기본적으로 띄우는 네이티브 알림 팝업 창(alert, confirm 등)은 HTML 코드가 아니기 때문에 **마우스로 닫거나 누르지 못해 봇 실행이 멈춥니다.**</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: center; gap: 10px; text-align: center;">
+            <div style="font-size: 3rem; color: var(--color-accent);"><i class="fa-solid fa-circle-xmark"></i></div>
+            <h4 style="font-size: 1.2rem;">alert("hello") 의 장벽</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">아주 원시적인 브라우저 경고창 하나에 자율 에이전트의 구동이 정지되는 취약성 존재</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 41: Installation and Free Pro Account -->
+      <section class="slide" data-title="설치 방법 및 무료 Pro 혜택" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Comet Browser 시작하기</span>
+            <h2 class="slide-title">지금 바로 Comet 설치하고 Pro 등급 무료로 쓰기!</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h3 style="font-size: 1.3rem; color: var(--color-primary);"><i class="fa-solid fa-graduation-cap"></i> 대학생 혜택 (Pro 1년 무료)</h3>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-muted);">
+              학교 이메일(.ac.kr 또는 .edu)을 통해 인증하면 최신 Comet Pro 에이전트 기능을 **1년간 완전 무료**로 마음껏 쓰실 수 있습니다.
+            </p>
+            <a href="https://pplx.ai/free-comet-students-korea" target="_blank" class="toolbar-btn" style="background: var(--color-primary); color: #000; justify-content: center; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> 대학생 Pro 1년 무료 바로가기</a>
+          </div>
+          <div class="card" style="border-color: rgba(168, 85, 247, 0.3); display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h3 style="font-size: 1.3rem; color: var(--color-secondary);"><i class="fa-solid fa-user"></i> 일반 유저 혜택 (Pro 1개월 무료)</h3>
+            <p style="font-size: 1rem; line-height: 1.6; color: var(--text-muted);">
+              대학생이 아니더라도 아래 프로모션 링크를 통해 신규 가입 시 자율 AI 어시스턴트 Pro 기능을 **1개월간 무료** 체험할 수 있습니다.
+            </p>
+            <a href="https://pplx.ai/comet_with_pro" target="_blank" class="toolbar-btn" style="background: var(--color-secondary); color: #fff; justify-content: center; text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> 일반 Pro 1개월 무료 바로가기</a>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>* Pro 등급이 있어야 자동 마우스/키보드 제어 기능인 '어시스턴트' 활성화가 가능합니다.</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 42: Security Issue -->
+      <section class="slide" data-title="보안 이슈" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">에이전트 사용 시 주의점</span>
+            <h2 class="slide-title">AI 브라우징 에이전트의 그늘: 개인정보와 보안</h2>
+          </div>
+          <span class="slide-badge badge-part3">Part 3</span>
+        </div>
+        <div class="slide-body layout-2col">
+          <div>
+            <ul class="bullet-list part3" style="gap: 20px;">
+              <li><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-accent);"></i> <span><strong>개인 데이터 노출</strong>: AI가 브라우저의 입력 박스를 알아서 채워주기 위해선 내 아이디, 비밀번호, 주소, 신용카드 정보가 클라우드 AI 서버로 전송되어야 합니다.</span></li>
+              <li><i class="fa-solid fa-triangle-exclamation" style="color: var(--color-accent);"></i> <span><strong>피싱 사이트 판별 취약</strong>: AI 에이전트가 가짜 결제 사이트(피싱 페이지)를 구분하지 못하고 중요한 금융 코드를 입력해 사기를 당할 리스크가 존재합니다.</span></li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(244, 63, 94, 0.2); background: rgba(0, 0, 0, 0.4); text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+            <div style="font-size: 3rem; color: var(--color-accent);"><i class="fa-solid fa-shield-halved"></i></div>
+            <h4 style="font-size: 1.2rem;">보안 수칙 필수</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">중요 금융 거래나 계정 비밀번호는 가급적 자율 에이전트 권한을 주기보다 수동 제어할 것</p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI 브라우저가 열어버린 웹 자동 조종 시대</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 43: Questions & Discussions (1) -->
+      <section class="slide" data-title="질문과 대답 (1)" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Q&A 및 자유 토론</span>
+            <h2 class="slide-title">우리가 함께 고민해 볼 개발 및 자동화 질문들</h2>
+          </div>
+          <span class="slide-badge badge-part3">Q & A</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h3 style="font-size: 1.25rem; color: var(--color-primary);"><i class="fa-solid fa-circle-question"></i> 토픽 1: 사내 시스템 자동화</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              "지마켓 내부 시스템이나 보안이 튼튼한 사내 인트라넷 환경에서도 이 자율 에이전트 브라우저를 가져다 붙여서 업무를 자동화할 수 있을까요?"
+            </p>
+          </div>
+          <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px; border-color: rgba(168, 85, 247, 0.3);">
+            <h3 style="font-size: 1.25rem; color: var(--color-secondary);"><i class="fa-solid fa-circle-question"></i> 토픽 2: 노코드 크롬 확장 연계</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              "요즘 유행하는 노코딩(No-Code) 툴로 나만의 크롬 확장 프로그램을 뚝딱 만드는데, 이 확장 프로그램을 Comet 브라우저 엔진과 물리적으로 엮어 돌릴 수도 있나요?"
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>궁금한 질문이 있다면 무엇이든 손을 들고 물어보세요!</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+      <!-- SLIDE 44: Questions & Discussions (2) -->
+      <section class="slide" data-title="질문과 대답 (2)" data-session="3">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <span class="slide-subtitle">Q&A 및 마무리</span>
+            <h2 class="slide-title">성능, 설치 가이드, 그리고 사내 보안 규정</h2>
+          </div>
+          <span class="slide-badge badge-part3">Q & A</span>
+        </div>
+        <div class="slide-body layout-2col equal">
+          <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px;">
+            <h3 style="font-size: 1.25rem; color: var(--color-accent);"><i class="fa-solid fa-gauge-high"></i> 성능과 레이턴시</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              AI 브라우저가 화면을 판단하고 버튼을 찾기까지 발생하는 처리 대기 시간(Latency)은 사람이 조작하는 것보다 얼마나 느릴까요? 안정성은 쓸만한가요?
+            </p>
+          </div>
+          <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 15px; border-color: rgba(16, 185, 129, 0.3);">
+            <h3 style="font-size: 1.25rem; color: var(--color-success);"><i class="fa-solid fa-shield-halved"></i> 사내 컴플라이언스 준수</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+              개발 세미나를 보고 마냥 신기해서 회사 업무 PC에 설치해보려니 보안 규정이나 라이선스 문제가 무서워 시도조차 못하고 망설인 적은 없나요?
+            </p>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <span>AI와 함께하는 미래 웹 에이전트 세미나를 마칩니다. 고생하셨습니다!</span>
+          <span class="teacher-tag">김민우 T</span>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Progress Bar Container -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progress-bar"></div>
+  </div>
+
+  <!-- Float Toolbar (Drawing/Laser Removed) -->
+  <footer class="presenter-toolbar">
+    <button class="toolbar-btn" id="sidebar-toggle-btn"><i class="fa-solid fa-list-ul"></i> 슬라이드 목록 (S)</button>
+    <button class="toolbar-btn" id="prev-btn"><i class="fa-solid fa-chevron-left"></i> 이전 (←)</button>
+    <button class="toolbar-btn" id="next-btn">다음 (→) <i class="fa-solid fa-chevron-right"></i></button>
+    <button class="toolbar-btn" id="confetti-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> 폭죽 🎉</button>
+  </footer>
+
+  <script>
+    // --- Slide state management ---
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarList = document.getElementById('sidebar-list');
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+
+    let currentSlideIdx = 0;
+
+    if (window.location.hash) {
+      const hashIdx = parseInt(window.location.hash.replace('#slide-', '')) - 1;
+      if (!isNaN(hashIdx) && hashIdx >= 0 && hashIdx < slides.length) {
+        currentSlideIdx = hashIdx;
+      }
+    }
+
+    function updateSlides(direction = 'forward') {
+      slides.forEach((slide, idx) => {
+        slide.classList.remove('active', 'slide-in-right', 'slide-in-left');
+        if (idx === currentSlideIdx) {
+          slide.classList.add('active');
+          if (direction === 'forward') {
+            slide.classList.add('slide-in-right');
+          } else if (direction === 'backward') {
+            slide.classList.add('slide-in-left');
+          }
+        }
+      });
+
+      // Update URL hash
+      window.location.hash = `slide-${currentSlideIdx + 1}`;
+
+      // Update Toolbar Buttons
+      prevBtn.classList.toggle('disabled', currentSlideIdx === 0);
+      nextBtn.classList.toggle('disabled', currentSlideIdx === slides.length - 1);
+
+      // Update Progress Bar
+      const progressPercent = ((currentSlideIdx) / (slides.length - 1)) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+
+      // Update Sidebar Active state
+      const sidebarItems = sidebarList.querySelectorAll('.sidebar-item');
+      sidebarItems.forEach((item, idx) => {
+        item.classList.toggle('active', idx === currentSlideIdx);
+      });
+
+      // Close sidebar on navigation
+      sidebar.classList.remove('open');
+    }
+
+    function nextSlide() {
+      if (currentSlideIdx < slides.length - 1) {
+        currentSlideIdx++;
+        updateSlides('forward');
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIdx > 0) {
+        currentSlideIdx--;
+        updateSlides('backward');
+      }
+    }
+
+    // --- Key listeners ---
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key.toLowerCase() === 's') {
+        toggleSidebar();
+      }
+    });
+
+    // Button clicks
+    prevBtn.addEventListener('click', () => {
+      if (!prevBtn.classList.contains('disabled')) prevSlide();
+    });
+    nextBtn.addEventListener('click', () => {
+      if (!nextBtn.classList.contains('disabled')) nextSlide();
+    });
+
+    // --- Sidebar Drawer Menu Logic ---
+    function toggleSidebar() {
+      sidebar.classList.toggle('open');
+    }
+
+    sidebarToggleBtn.addEventListener('click', toggleSidebar);
+    sidebarCloseBtn.addEventListener('click', () => sidebar.classList.remove('open'));
+
+    // Populate Sidebar Items
+    slides.forEach((slide, idx) => {
+      const title = slide.getAttribute('data-title') || `Slide ${idx + 1}`;
+      const session = slide.getAttribute('data-session') || '1';
+      
+      const item = document.createElement('div');
+      item.className = 'sidebar-item';
+      if (session === '2') {
+        item.classList.add('sidebar-item-sec2');
+      } else if (session === '3') {
+        item.classList.add('sidebar-item-sec3');
+      }
+      if (idx === currentSlideIdx) item.classList.add('active');
+
+      item.innerHTML = `
+        <span>${idx + 1}. ${title}</span>
+        <span class="sidebar-badge">Part ${session}</span>
+      `;
+
+      item.addEventListener('click', () => {
+        const direction = idx > currentSlideIdx ? 'forward' : 'backward';
+        currentSlideIdx = idx;
+        updateSlides(direction);
+      });
+
+      sidebarList.appendChild(item);
+    });
+
+    // Initialize slide deck
+    updateSlides();
+
+    // --- Confetti Button ---
+    document.getElementById('confetti-btn').addEventListener('click', () => {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.8 }
+      });
+    });
+
+    // ==========================================
+    // INTERACTIVE QUIZ WIDGETS
+    // ==========================================
+    function setupQuiz(containerId, feedbackId) {
+      const container = document.getElementById(containerId);
+      const feedback = document.getElementById(feedbackId);
+      const options = container.querySelectorAll('.quiz-option');
+
+      options.forEach(option => {
+        option.addEventListener('click', () => {
+          // Reset status on other choices
+          options.forEach(opt => opt.classList.remove('correct', 'wrong'));
+          
+          const isCorrect = option.getAttribute('data-correct') === 'true';
+          if (isCorrect) {
+            option.classList.add('correct');
+            feedback.innerText = "🎉 정답입니다! 축하합니다!";
+            feedback.style.color = "#34d399";
+            
+            // Trigger confetti
+            confetti({
+              particleCount: 100,
+              spread: 60,
+              origin: { y: 0.7 }
+            });
+          } else {
+            option.classList.add('wrong');
+            feedback.innerText = "❌ 오답입니다. 다시 한번 생각해 보세요!";
+            feedback.style.color = "#fda4af";
+          }
+        });
+      });
+    }
+
+    setupQuiz('quiz-1', 'quiz-1-feedback');
+    setupQuiz('quiz-2', 'quiz-2-feedback');
+
+    // ==========================================
+    // INTERACTIVE BATTLE SIMULATOR (Bot vs Server)
+    // ==========================================
+    const runBattleBtn = document.getElementById('run-battle-btn');
+    const battleTerminal = document.getElementById('battle-terminal');
+
+    runBattleBtn.addEventListener('click', () => {
+      const cheatUa = document.getElementById('cheat-ua').checked;
+      const cheatDelay = document.getElementById('cheat-delay').checked;
+      const cheatIp = document.getElementById('cheat-ip').checked;
+
+      const defendUa = document.getElementById('defend-ua').checked;
+      const defendRate = document.getElementById('defend-rate').checked;
+      const defendCaptcha = document.getElementById('defend-captcha').checked;
+
+      battleTerminal.innerHTML = "&gt; Crawler Bot launching query thread...<br>";
+      
+      setTimeout(() => {
+        // Step 1: User Agent check
+        if (defendUa && !cheatUa) {
+          battleTerminal.innerHTML += "<span style='color:#f43f5e;'>&gt; [BLOCKED] Server Web Application Firewall detected Python-requests User-Agent. Access denied. (403 Forbidden)</span>";
+          return;
+        } else if (defendUa && cheatUa) {
+          battleTerminal.innerHTML += "&gt; [PASS] User-Agent masked as Chrome Desktop. Initial handshake successful.<br>";
+        } else {
+          battleTerminal.innerHTML += "&gt; [PASS] No User-Agent validation active on server.<br>";
+        }
+
+        setTimeout(() => {
+          // Step 2: Rate limit check
+          if (defendRate && !cheatDelay) {
+            battleTerminal.innerHTML += "<span style='color:#f43f5e;'>&gt; [BLOCKED] Server Rate Limiter tripped: 150 hits/sec detected from single IP. IP blacklisted. (429 Too Many Requests)</span>";
+            return;
+          } else if (defendRate && cheatDelay) {
+            battleTerminal.innerHTML += "&gt; [PASS] Rate Limiter bypassed via random 1.2s crawl delay.<br>";
+          } else {
+            battleTerminal.innerHTML += "&gt; [PASS] Rate Limiting checks inactive.<br>";
+          }
+
+          setTimeout(() => {
+            // Step 3: Captcha and IP rotation
+            if (defendCaptcha && !cheatIp) {
+              battleTerminal.innerHTML += "<span style='color:#f43f5e;'>&gt; [BLOCKED] Server initiated anti-bot CAPTCHA wall. JavaScript alert popped. Automation execution halted.</span>";
+              return;
+            } else if (defendCaptcha && cheatIp) {
+              battleTerminal.innerHTML += "&gt; [PASS] CAPTCHA bypassed by routing through proxy swarm and executing OCR solver.<br>";
+            }
+
+            // Success
+            battleTerminal.innerHTML += "<span style='color:#34d399; font-weight:700;'>&gt; [SUCCESS] All defenses bypassed! Extracted price data: '16,900 KRW' written to data.csv!</span>";
+            
+            confetti({
+              particleCount: 50,
+              spread: 40,
+              origin: { y: 0.6 }
+            });
+          }, 800);
+        }, 800);
+      }, 800);
+    });
+  </script>
+</body>
+</html>
