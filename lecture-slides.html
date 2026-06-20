@@ -60,13 +60,14 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 20px 20px 90px 20px; /* Pad bottom for fixed toolbar */
       position: relative;
+      overflow: hidden;
     }
 
     .slide-wrapper {
-      width: var(--slide-width);
-      height: var(--slide-height);
+      width: min(100%, calc((100vh - 160px) * 16 / 9));
+      max-width: 1280px;
       aspect-ratio: 16 / 9;
       background: linear-gradient(180deg, #111827 0%, #030712 100%);
       border: 1px solid var(--card-border);
@@ -76,6 +77,7 @@
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
+      container-type: size;
     }
 
     /* Individual Slide */
@@ -90,7 +92,7 @@
       transition: opacity 0.3s ease, visibility 0.3s ease;
       display: flex;
       flex-direction: column;
-      padding: 50px 60px;
+      padding: 4% 5% 5% 5%;
       justify-content: space-between;
       z-index: 1;
     }
@@ -139,14 +141,14 @@
     }
 
     .slide-subtitle {
-      font-size: 0.9rem;
+      font-size: 1.2cqw;
       color: var(--text-muted);
       font-weight: 600;
       letter-spacing: 0.5px;
     }
 
     .slide-title {
-      font-size: 2.2rem;
+      font-size: 2.8cqw;
       font-weight: 800;
       background: var(--grad-primary);
       -webkit-background-clip: text;
@@ -229,7 +231,7 @@
     }
 
     .bullet-list li {
-      font-size: 1.2rem;
+      font-size: 1.5cqw;
       line-height: 1.6;
       display: flex;
       align-items: flex-start;
@@ -239,7 +241,7 @@
     .bullet-list li i {
       color: #38bdf8;
       margin-top: 5px;
-      font-size: 1rem;
+      font-size: 1.3cqw;
     }
 
     .bullet-list.session2 li i {
@@ -258,14 +260,19 @@
 
     /* Floating Presenter Toolbar */
     .presenter-toolbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
       display: flex;
       justify-content: center;
       gap: 12px;
       padding: 15px;
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255, 255, 255, 0.05);
-      z-index: 100;
+      z-index: 1000;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
     }
 
     .toolbar-btn {
@@ -1730,8 +1737,8 @@
               <div class="arena-title">이미지 생성 AI</div>
               <div class="arena-desc">DALL-E, Midjourney<br>원하는 화풍과 캐릭터를 말하면 고화질 일러스트 완성!</div>
               <div class="arena-links">
-                <a href="https://pollinations.ai" target="_blank" class="arena-link-btn">
-                  <span>🎨 Pollinations AI</span> <span class="no-login-badge">가입 없음</span>
+                <a href="https://perchance.org/ai-image-generator" target="_blank" class="arena-link-btn">
+                  <span>🎨 Perchance AI</span> <span class="no-login-badge">가입 없음</span>
                 </a>
                 <a href="https://www.craiyon.com" target="_blank" class="arena-link-btn">
                   <span>🖌️ Craiyon</span> <span class="no-login-badge">가입 없음</span>
@@ -1743,11 +1750,11 @@
               <div class="arena-title">음악 생성 AI</div>
               <div class="arena-desc">Suno, Udio<br>가사와 멜로디, 분위기를 조합해 프로 수준의 곡을 작곡!</div>
               <div class="arena-links">
-                <a href="https://huggingface.co/spaces/facebook/MusicGen" target="_blank" class="arena-link-btn">
-                  <span>🎵 Meta MusicGen</span> <span class="no-login-badge">가입 없음</span>
+                <a href="https://musichero.ai" target="_blank" class="arena-link-btn">
+                  <span>🎵 MusicHero AI</span> <span class="no-login-badge">가입 없음</span>
                 </a>
-                <a href="https://www.riffusion.com" target="_blank" class="arena-link-btn">
-                  <span>🎹 Riffusion</span> <span class="no-login-badge">가입 없음</span>
+                <a href="https://aimusicgen.ai" target="_blank" class="arena-link-btn">
+                  <span>🎹 AIMusicGen</span> <span class="no-login-badge">가입 없음</span>
                 </a>
               </div>
             </div>
