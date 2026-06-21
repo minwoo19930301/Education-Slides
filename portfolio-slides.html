@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>엔트리 똥피하기 게임 만들기</title>
+  <title>취업준비생용 포트폴리오 및 발표자료</title>
   
   <!-- Font Setup: Outfit (Numbers/English) & Inter & Noto Sans KR -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
       --bg-card-hover: rgba(31, 41, 55, 0.8);
       --border-color: rgba(255, 255, 255, 0.08);
       
-      --color-primary: #10b981; /* Emerald */
+      --color-primary: #a855f7; /* Purple */
       --color-secondary: #06b6d4; /* Cyan */
       --color-accent: #f43f5e; /* Rose */
       --color-success: #10b981; /* Emerald */
@@ -69,7 +69,7 @@
       position: absolute;
       border-radius: 50%;
       filter: blur(150px);
-      opacity: 0.15;
+      opacity: 0.12;
     }
 
     .orb-1 {
@@ -103,8 +103,8 @@
       width: 100%;
       height: 100%;
       background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
       background-size: 50px 50px;
       z-index: -1;
       pointer-events: none;
@@ -200,7 +200,7 @@
     .sidebar-header h3 {
       font-size: 1.2rem;
       font-weight: 800;
-      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      background: linear-gradient(90deg, #ffffff, var(--text-muted));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -209,13 +209,14 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       cursor: pointer;
       transition: var(--transition-smooth);
     }
 
     .sidebar-close:hover {
       color: #ffffff;
+      transform: scale(1.1);
     }
 
     .sidebar-list {
@@ -231,143 +232,51 @@
     .sidebar-list::-webkit-scrollbar {
       width: 6px;
     }
+
     .sidebar-list::-webkit-scrollbar-track {
       background: transparent;
     }
+
     .sidebar-list::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-    }
-    .sidebar-list::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
     }
 
     .sidebar-item {
-      padding: 14px 20px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      cursor: pointer;
-      transition: var(--transition-smooth);
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .sidebar-item:hover {
-      background: rgba(16, 185, 129, 0.05);
-      border-color: rgba(16, 185, 129, 0.2);
-    }
-
-    .sidebar-item.active {
-      background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
-      border-color: rgba(16, 185, 129, 0.4);
-    }
-
-    .sidebar-item span {
-      font-size: 0.92rem;
-      font-weight: 500;
-    }
-
-    .sidebar-item.active span {
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    .sidebar-badge {
-      font-family: var(--font-english);
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      background: rgba(16, 185, 129, 0.1);
-      padding: 2px 8px;
-      border-radius: 6px;
-    }
-
-    /* Floating Presenter Toolbar */
-    .presenter-toolbar {
-      position: fixed;
-      bottom: 25px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(17, 24, 39, 0.6);
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border-color);
-      padding: 12px 24px;
-      border-radius: 99px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      z-index: 900;
-    }
-
-    .toolbar-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-main);
-      padding: 8px 16px;
-      border-radius: 99px;
+      border-radius: 12px;
       cursor: pointer;
-      font-weight: 700;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
       transition: var(--transition-smooth);
     }
 
-    .toolbar-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .toolbar-btn.disabled {
-      opacity: 0.3;
-      pointer-events: none;
-    }
-
-    #confetti-btn {
-      color: var(--color-accent);
-    }
-    #confetti-btn:hover {
-      background: rgba(244, 63, 94, 0.1);
-    }
-
-    /* Progress Bar */
-    .progress-bar-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
+    .sidebar-item:hover {
       background: rgba(255, 255, 255, 0.05);
-      z-index: 900;
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(-3px);
     }
 
-    .progress-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-      transition: width 0.3s ease;
+    .sidebar-item.active {
+      background: rgba(168, 85, 247, 0.12);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--color-primary);
     }
 
-    /* Directional transitions */
-    .slide-in-right {
-      animation: slideInRight 0.4s ease forwards;
+    .sidebar-badge {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
     }
 
-    .slide-in-left {
-      animation: slideInLeft 0.4s ease forwards;
-    }
-
-    @keyframes slideInRight {
-      from { transform: translateX(5%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    @keyframes slideInLeft {
-      from { transform: translateX(-5%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    .sidebar-item.active .sidebar-badge {
+      background: rgba(168, 85, 247, 0.2);
+      color: #ffffff;
     }
 
     /* Drawing Overlay Canvas */
@@ -402,15 +311,101 @@
       transform: translate(-50%, -50%);
     }
 
+    /* Progress Bar */
+    .progress-bar-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 1001;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      box-shadow: 0 0 8px var(--color-primary);
+      transition: width 0.3s ease;
+    }
+
+    /* Toolbar styling */
+    .presenter-toolbar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
+      padding: 10px 24px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 999;
+    }
+
+    .toolbar-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+    }
+
     .toolbar-btn.active {
       background: var(--color-primary);
       color: #000000;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 20px;
+      background-color: var(--border-color);
+    }
+
+    .toolbar-link {
+      text-decoration: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+    }
+
+    .toolbar-link:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+    }
+
+    .toolbar-btn.disabled {
+      opacity: 0.3;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Background decorations -->
+  <!-- Background Orbs -->
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -429,7 +424,7 @@
   <!-- Sidebar Drawer -->
   <aside class="sidebar" id="sidebar" aria-label="슬라이드 네비게이션">
     <div class="sidebar-header">
-      <h3>엔트리 똥피하기 게임</h3>
+      <h3>포트폴리오 발표자료</h3>
       <button class="sidebar-close" id="sidebar-close-btn" aria-label="닫기">&times;</button>
     </div>
     <div class="sidebar-list" id="sidebar-list">
@@ -443,23 +438,23 @@
   </div>
 
   <!-- Float Toolbar -->
-  <footer class="presenter-toolbar" style="display: flex; gap: 10px; align-items: center;">
-    <a href="index.html" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center;" class="toolbar-btn"><i class="fa-solid fa-house"></i> 홈으로</a>
-    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></div>
+  <footer class="presenter-toolbar">
+    <a href="index.html" class="toolbar-link"><i class="fa-solid fa-house"></i> 홈으로</a>
+    <div class="toolbar-divider"></div>
     <button class="toolbar-btn" id="sidebar-toggle-btn"><i class="fa-solid fa-list-ul"></i> 목록 (S)</button>
     <button class="toolbar-btn" id="laser-btn"><i class="fa-solid fa-arrow-pointer"></i> 포인터 (L)</button>
     <button class="toolbar-btn" id="draw-btn"><i class="fa-solid fa-pen"></i> 그리기 (D)</button>
     <button class="toolbar-btn" id="clear-btn" style="display:none;"><i class="fa-solid fa-eraser"></i> 지우기 (C)</button>
-    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></div>
+    <div class="toolbar-divider"></div>
     <button class="toolbar-btn" id="prev-btn"><i class="fa-solid fa-chevron-left"></i> 이전 (←)</button>
     <button class="toolbar-btn" id="next-btn">다음 (→) <i class="fa-solid fa-chevron-right"></i></button>
-    <button class="toolbar-btn" id="confetti-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> 폭죽 🎉</button>
-    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></div>
-    <a href="downloads/entry-poop-presentation.pptx" download style="text-decoration: none; color: var(--color-primary); background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); display: inline-flex; align-items: center;" class="toolbar-btn"><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+    <button class="toolbar-btn" id="confetti-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> 축하 🎉</button>
+    <div class="toolbar-divider"></div>
+    <a href="downloads/portfolio-presentation.pptx" download class="toolbar-link" style="color: var(--color-primary); background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2);"><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
   </footer>
 
   <script>
-    const totalSlides = 18;
+    const totalSlides = 37;
     const wrapper = document.getElementById('slide-wrapper');
     const sidebarList = document.getElementById('sidebar-list');
 
@@ -470,7 +465,7 @@
       
       const padded = String(i).padStart(2, '0');
       const img = document.createElement('img');
-      img.src = `./entry-poop-ppt/slide-${padded}.png`;
+      img.src = `./portfolio-ppt/slide-${padded}.png`;
       img.alt = `Slide ${i}`;
       img.className = 'slide-image';
       img.loading = i > 3 ? 'lazy' : 'eager';
@@ -499,14 +494,9 @@
 
     function updateSlides(direction = 'forward') {
       slides.forEach((slide, idx) => {
-        slide.classList.remove('active', 'slide-in-right', 'slide-in-left');
+        slide.classList.remove('active');
         if (idx === currentSlideIdx) {
           slide.classList.add('active');
-          if (direction === 'forward') {
-            slide.classList.add('slide-in-right');
-          } else if (direction === 'backward') {
-            slide.classList.add('slide-in-left');
-          }
         }
       });
 
@@ -529,7 +519,7 @@
 
       // Close sidebar on navigation
       sidebar.classList.remove('open');
-
+      
       // Clear drawing on slide change
       clearDrawing();
     }
@@ -717,7 +707,7 @@
       ctx.moveTo(x, y);
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
-      ctx.strokeStyle = '#10b981'; // Emerald drawing line to match primary
+      ctx.strokeStyle = '#f43f5e'; // Rose drawing line to match accent
     }
 
     function draw(e) {

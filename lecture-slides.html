@@ -403,6 +403,7 @@
       z-index: 90;
       pointer-events: none;
       cursor: crosshair;
+      touch-action: none;
     }
 
     .drawing-canvas.active {
@@ -2156,6 +2157,8 @@
         </div>
       </section>
 
+      <canvas class="drawing-canvas" id="drawing-canvas"></canvas>
+      <div class="laser-pointer" id="laser-pointer"></div>
     </div>
   </main>
 
@@ -2165,8 +2168,14 @@
   </div>
 
   <!-- Float Toolbar -->
-  <footer class="presenter-toolbar">
-    <button class="toolbar-btn" id="sidebar-toggle-btn"><i class="fa-solid fa-list-ul"></i> 슬라이드 목록 (S)</button>
+  <footer class="presenter-toolbar" style="display: flex; gap: 10px; align-items: center;">
+    <a href="index.html" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center;" class="toolbar-btn"><i class="fa-solid fa-house"></i> 홈으로</a>
+    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></div>
+    <button class="toolbar-btn" id="sidebar-toggle-btn"><i class="fa-solid fa-list-ul"></i> 목록 (S)</button>
+    <button class="toolbar-btn" id="laser-btn"><i class="fa-solid fa-arrow-pointer"></i> 포인터 (L)</button>
+    <button class="toolbar-btn" id="draw-btn"><i class="fa-solid fa-pen"></i> 그리기 (D)</button>
+    <button class="toolbar-btn" id="clear-btn" style="display:none;"><i class="fa-solid fa-eraser"></i> 지우기 (C)</button>
+    <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.15);"></div>
     <button class="toolbar-btn" id="prev-btn"><i class="fa-solid fa-chevron-left"></i> 이전 (←)</button>
     <button class="toolbar-btn" id="next-btn">다음 (→) <i class="fa-solid fa-chevron-right"></i></button>
     <button class="toolbar-btn" id="confetti-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> 폭죽 🎉</button>
@@ -2215,6 +2224,11 @@
 
         // Set hash to save state
         window.location.hash = `slide-${currentSlideIdx + 1}`;
+
+        // Clear drawing on slide change
+        if (typeof clearDrawing === 'function') {
+          clearDrawing();
+        }
       };
 
       // Native view transitions support with fallback
@@ -2255,6 +2269,12 @@
         prevSlide();
       } else if (e.key.toLowerCase() === 's') {
         toggleSidebar();
+      } else if (e.key.toLowerCase() === 'd') {
+        if (typeof toggleDrawingMode === 'function') toggleDrawingMode();
+      } else if (e.key.toLowerCase() === 'l') {
+        if (typeof toggleLaserMode === 'function') toggleLaserMode();
+      } else if (e.key.toLowerCase() === 'c') {
+        if (typeof clearDrawing === 'function') clearDrawing();
       }
     });
 
@@ -2301,6 +2321,21 @@
       sidebarList.appendChild(item);
     });
 
+    // Initialize slide on page load
+    updateSlides();
+
+    // Two-way URL Hash Sync
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash) {
+        const hashIdx = parseInt(window.location.hash.replace('#slide-', ''), 10) - 1;
+        if (!isNaN(hashIdx) && hashIdx >= 0 && hashIdx < slides.length && hashIdx !== currentSlideIdx) {
+          const direction = hashIdx > currentSlideIdx ? 'forward' : 'backward';
+          currentSlideIdx = hashIdx;
+          updateSlides(direction);
+        }
+      }
+    });
+
     // --- Confetti Button ---
     document.getElementById('confetti-btn').addEventListener('click', () => {
       confetti({
@@ -2309,6 +2344,130 @@
         origin: { y: 0.8 }
       });
     });
+
+    // ==========================================
+    // Laser Pointer and Drawing Canvas Logic
+    // ==========================================
+    const canvas = document.getElementById('drawing-canvas');
+    const laserPointer = document.getElementById('laser-pointer');
+    const laserBtn = document.getElementById('laser-btn');
+    const drawBtn = document.getElementById('draw-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const slideWrapper = document.getElementById('slide-wrapper');
+
+    let isDrawingMode = false;
+    let isLaserMode = false;
+    let isDrawing = false;
+    let ctx = null;
+
+    if (canvas) {
+      ctx = canvas.getContext('2d');
+      function resizeCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        clearDrawing();
+      }
+      window.addEventListener('resize', resizeCanvas);
+      setTimeout(resizeCanvas, 500);
+    }
+
+    function clearDrawing() {
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function toggleDrawingMode() {
+      isDrawingMode = !isDrawingMode;
+      if (isDrawingMode) {
+        isLaserMode = false;
+        laserPointer.style.display = 'none';
+        laserBtn.classList.remove('active');
+        
+        canvas.classList.add('active');
+        drawBtn.classList.add('active');
+        clearBtn.style.display = 'inline-flex';
+      } else {
+        canvas.classList.remove('active');
+        drawBtn.classList.remove('active');
+        clearBtn.style.display = 'none';
+      }
+    }
+
+    function toggleLaserMode() {
+      isLaserMode = !isLaserMode;
+      if (isLaserMode) {
+        isDrawingMode = false;
+        canvas.classList.remove('active');
+        drawBtn.classList.remove('active');
+        clearBtn.style.display = 'none';
+
+        laserBtn.classList.add('active');
+      } else {
+        laserPointer.style.display = 'none';
+        laserBtn.classList.remove('active');
+      }
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (isLaserMode) {
+        const rect = slideWrapper.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          laserPointer.style.display = 'block';
+          laserPointer.style.left = (e.clientX - rect.left) + 'px';
+          laserPointer.style.top = (e.clientY - rect.top) + 'px';
+        } else {
+          laserPointer.style.display = 'none';
+        }
+      }
+    });
+
+    if (canvas) {
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+
+      canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        startDrawing(touch);
+      });
+      canvas.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        draw(touch);
+      });
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function startDrawing(e) {
+      if (!isDrawingMode) return;
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.pageX) - rect.left;
+      const y = (e.clientY || e.pageY) - rect.top;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#38bdf8'; // Cyan drawing line for lecture-slides.html
+    }
+
+    function draw(e) {
+      if (!isDrawing || !isDrawingMode) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.pageX) - rect.left;
+      const y = (e.clientY || e.pageY) - rect.top;
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    laserBtn.addEventListener('click', toggleLaserMode);
+    drawBtn.addEventListener('click', toggleDrawingMode);
+    clearBtn.addEventListener('click', clearDrawing);
 
 
     // ==========================================
