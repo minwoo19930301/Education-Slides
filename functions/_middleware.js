@@ -6,7 +6,7 @@ export async function onRequest(context) {
   const sessionCookieName = "ai-ing-auth";
   
   // Set the password from Cloudflare Pages Environment Variable, fallback to "1234" if not configured yet
-  const CORRECT_PASSWORD = env.SLIDES_PASSWORD || "1234";
+  const CORRECT_PASSWORD = env.SLIDES_PASSWORD || "3633";
   const expectedToken = "verified";
   
   // Check if session cookie matches
