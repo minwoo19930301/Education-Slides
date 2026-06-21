@@ -306,26 +306,6 @@
       font-weight: 700;
       color: #ffffff;
     }
-
-    /* Sub Grid for Redesigns */
-    .sub-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 20px;
-    }
-
-    @media (max-width: 992px) {
-      .sub-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .sub-grid {
-        grid-template-columns: 1fr;
-      }
-    }
   </style>
 </head>
 <body>
@@ -413,96 +393,20 @@
         <a href="ai-agents-slides/index.html" class="card-link">강의 시작하기 <i class="fa-solid fa-arrow-right"></i></a>
       </div>
 
-    </main>
-
-    <header style="margin-top: 60px; text-align: center; display: flex; flex-direction: column; gap: 15px;">
-      <div class="header-badge">Web & Landing Page Prototypes</div>
-      <h2>에이아잉 프로젝트 웹페이지 목록</h2>
-      <p class="lead-text" style="font-size: 1.05rem;">
-        에이아잉 비즈니스 랜딩 페이지 후보군 및 웹 에이전시 프로토타입 시안 모음입니다.
-      </p>
-    </header>
-
-    <main class="sub-grid">
-      
-      <!-- Card: AW 1 -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-static" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success); border-color: rgba(16, 185, 129, 0.2);">Prototype AW-1</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이아잉 시안 AW-1</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">Bento Grid 스타일의 비즈니스 AX 전환 랜딩 페이지 프로토타입 첫 번째 버전입니다.</p>
+      <!-- Card 5: Entry Poop Game Slides -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-badge badge-static" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success); border-color: rgba(16, 185, 129, 0.2);">Image Slide Deck</div>
+          <h3 class="card-title">엔트리 똥피하기 게임 만들기</h3>
+          <p class="card-desc">
+            학생들이 엔트리(Entry) 블록 코딩 플랫폼을 이용해 '똥피하기' 미니게임을 단계별로 기획하고 로직을 작성해 동작시키는 전체 실습 교육 자료입니다.
+          </p>
+          <div class="card-meta">
+            <div class="meta-item"><i class="fa-solid fa-list"></i> <span>18 Slides</span></div>
+            <div class="meta-item"><i class="fa-solid fa-graduation-cap"></i> <span>초/중등 실습용</span></div>
+          </div>
         </div>
-        <a href="ai-ing-aw-1.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: AW 2 -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-static" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success); border-color: rgba(16, 185, 129, 0.2);">Prototype AW-2</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이아잉 시안 AW-2</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">다크네온 톤의 세련된 타이포그래피와 인터랙티브 섹션이 돋보이는 두 번째 버전입니다.</p>
-        </div>
-        <a href="ai-ing-aw-2.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: AW 3 -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-static" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success); border-color: rgba(16, 185, 129, 0.2);">Prototype AW-3</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이아잉 시안 AW-3</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">모던한 레이아웃에 마우스 인터랙션을 접목한 소개 페이지 세 번째 버전입니다.</p>
-        </div>
-        <a href="ai-ing-aw-3.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: Candidate 1 -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-static" style="background: rgba(244, 63, 94, 0.1); color: var(--color-accent); border-color: rgba(244, 63, 94, 0.2);">Candidate 1</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이아잉 후보 1</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">미니멀하고 깨끗한 레이아웃의 비즈니스 홈페이지 후보 디자인안입니다.</p>
-        </div>
-        <a href="ai-ing-cand-1.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: Candidate 2 -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-static" style="background: rgba(244, 63, 94, 0.1); color: var(--color-accent); border-color: rgba(244, 63, 94, 0.2);">Candidate 2</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이아잉 후보 2</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">골드와 그레이 톤으로 신뢰감을 높인 비즈니스 AX 소개 랜딩 페이지입니다.</p>
-        </div>
-        <a href="ai-ing-cand-2.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: Candidate 3 -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-static" style="background: rgba(244, 63, 94, 0.1); color: var(--color-accent); border-color: rgba(244, 63, 94, 0.2);">Candidate 3</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이아잉 후보 3</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">고객 맞춤형 AX 컨설팅 및 실무 매뉴얼 교육 제안을 포함한 후보 디자인입니다.</p>
-        </div>
-        <a href="ai-ing-cand-3.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: Agency -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-interactive">Agency Concept</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">에이전시 웹 시안</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">업무 자동화 및 개발 대행 에이전시 컨셉의 전용 웹 프로토타입 페이지입니다.</p>
-        </div>
-        <a href="ai-ing-agency.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Card: Redesign -->
-      <div class="card" style="padding: 25px; border-radius: 16px; gap: 15px;">
-        <div class="card-top" style="gap: 8px;">
-          <div class="card-badge badge-interactive">Redesign Concept</div>
-          <h3 class="card-title" style="font-size: 1.25rem;">리디자인 웹 시안</h3>
-          <p class="card-desc" style="font-size: 0.88rem; line-height: 1.5;">기존 랜딩 페이지 구성을 최신 컴포넌트와 레이아웃으로 다듬은 시안입니다.</p>
-        </div>
-        <a href="ai-ing-redesign.html" class="card-link" style="padding: 10px 15px; font-size: 0.85rem; border-radius: 8px;">시안 보기 <i class="fa-solid fa-arrow-right"></i></a>
+        <a href="entry-poop-slides.html" class="card-link">강의 시작하기 <i class="fa-solid fa-arrow-right"></i></a>
       </div>
 
     </main>
