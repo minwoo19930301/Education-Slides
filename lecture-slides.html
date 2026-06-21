@@ -1409,27 +1409,96 @@
           <div>
             <ul class="bullet-list" style="gap: 12px;">
               <li><i class="fa-solid fa-keyboard"></i> <span>키보드의 <strong>F12 키</strong>를 누르면 <strong>개발자 도구</strong>가 열려요.</span></li>
-              <li><i class="fa-solid fa-arrow-pointer"></i> <span>마우스 탐색기 버튼을 클릭하여 수정하고 싶은 요소를 고를 수 있습니다.</span></li>
-              <li><i class="fa-solid fa-fire"></i> <span><strong>[실습 미션]</strong> 오른쪽 모형 브라우저 안의 날씨 요소를 직접 마우스 우클릭 후 <strong>'검사'</strong>하여 <strong>온도 숫자(24)</strong>를 더블클릭하고 다른 숫자로 고쳐보세요!</span></li>
-              <li><i class="fa-solid fa-rotate"></i> <span>수정 완료 후 <strong>새로고침(F5)</strong> 버튼을 눌러 초기화해 보세요.</span></li>
+              <li><i class="fa-solid fa-arrow-pointer"></i> <span><strong>[마우스 탐색기 ↖]</strong> 버튼을 누르고 화면의 요소를 마우스로 가리켜 보세요! (호버)</span></li>
+              <li><i class="fa-solid fa-hand-pointer"></i> <span>수정하고 싶은 요소를 클릭하면 아래 코드 창에서 선택됩니다.</span></li>
+              <li><i class="fa-solid fa-pencil"></i> <span><strong>온도 숫자(24)</strong>나 글자를 더블클릭하여 내 맘대로 바꾸고 엔터를 쳐보세요!</span></li>
+              <li><i class="fa-solid fa-rotate"></i> <span>수정 완료 후 <strong>새로고침</strong> 버튼을 누르면 초기화됩니다.</span></li>
             </ul>
           </div>
           <div>
-            <!-- Weather Simulator Widget -->
-            <div class="mock-browser">
-              <div class="browser-header">
-                <div class="browser-dots">
-                  <span class="browser-dot dot-red"></span>
-                  <span class="browser-dot dot-yellow"></span>
-                  <span class="browser-dot dot-green"></span>
+            <!-- Right side: Mock Browser -->
+            <div class="mock-browser" style="height: 440px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-color); border-radius: 12px; background: #000;">
+              <div class="browser-header" style="flex-shrink: 0; background: #202124; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div class="browser-dots" style="display: flex; gap: 6px; margin-right: 15px;">
+                  <span class="browser-dot dot-red" style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f56; display: inline-block;"></span>
+                  <span class="browser-dot dot-yellow" style="width: 10px; height: 10px; border-radius: 50%; background: #ffbd2e; display: inline-block;"></span>
+                  <span class="browser-dot dot-green" style="width: 10px; height: 10px; border-radius: 50%; background: #27c93f; display: inline-block;"></span>
                 </div>
-                <div class="browser-address">
-                  <span>https://weather.com/seoul</span>
-                  <button class="browser-reload-btn" id="weather-reload"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="browser-address" style="flex: 1; background: rgba(255,255,255,0.05); padding: 4px 15px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: #a1a1aa;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <button id="mock-f12-selector" class="browser-tool-btn" title="요소 선택기 (↖)" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 2px 6px; font-size: 0.9rem; border-radius: 4px; display: flex; align-items: center; transition: all 0.2s;"><i class="fa-solid fa-arrow-pointer"></i></button>
+                    <span style="color: rgba(255,255,255,0.15);">|</span>
+                    <span>https://weather.com/seoul</span>
+                  </div>
+                  <button class="browser-reload-btn" id="weather-reload" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 0 4px; font-size: 0.85rem;"><i class="fa-solid fa-rotate-right"></i></button>
                 </div>
               </div>
-              <div class="browser-content" id="weather-content" style="padding: 0; height: 350px;">
-                <iframe id="weather-iframe" src="mock-weather.html" style="width: 100%; height: 100%; border: none;"></iframe>
+              
+              <div class="browser-body-container" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+                
+                <!-- Mock Weather App View (Top 55% height) -->
+                <div id="mock-weather-screen" style="height: 55%; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #f8fafc; font-family: sans-serif; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; padding: 10px;">
+                  
+                  <div class="weather-card-mock" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 20px; border-radius: 10px; width: 220px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: all 0.2s;">
+                    <div id="inspect-loc" class="inspectable-element" data-tag="div.location" style="font-size: 0.95rem; font-weight: 700; color: #38bdf8; margin-bottom: 2px; padding: 1px 4px; border: 1px dashed transparent; border-radius: 3px;">대한민국 서울</div>
+                    <div id="inspect-date" style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 4px;">실시간 날씨 정보</div>
+                    
+                    <div id="inspect-icon" class="inspectable-element" data-tag="div.weather-icon" style="font-size: 2rem; margin: 2px 0; color: #f59e0b; display: inline-block; padding: 1px 4px; border: 1px dashed transparent; border-radius: 3px; cursor: pointer; transition: transform 0.2s;">☀️</div>
+                    
+                    <div style="font-size: 2.2rem; font-weight: 800; margin-bottom: 2px; letter-spacing: -1px; display: flex; align-items: center; justify-content: center;">
+                      <span id="inspect-temp" class="inspectable-element" data-tag="span#weather-temp" style="color: #ffffff; padding: 1px 4px; border: 1px dashed transparent; border-radius: 3px; display: inline-block;">24</span><span style="color: #38bdf8;">°C</span>
+                    </div>
+                    
+                    <div id="inspect-desc" class="inspectable-element" data-tag="div.description" style="font-size: 0.85rem; color: #cbd5e1; padding: 1px 4px; border: 1px dashed transparent; border-radius: 3px;">맑음</div>
+                  </div>
+
+                  <!-- Hover Tooltip -->
+                  <div id="mock-inspect-tooltip" style="position: absolute; display: none; background: #38bdf8; color: #070a13; font-family: monospace; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 3px; z-index: 100; pointer-events: none; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">span#weather-temp</div>
+                </div>
+
+                <!-- Mock DevTools Code Panel (Bottom 45% height) -->
+                <div id="mock-devtools-panel" style="height: 45%; background: #1e1e24; border-top: 2px solid #2d2d34; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #abb2bf; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+                  <div style="background: #25252b; padding: 4px 15px; border-bottom: 1px solid #2d2d34; color: #64748b; font-weight: 700; display: flex; gap: 15px; flex-shrink: 0;">
+                    <span style="color: #22d3ee; border-bottom: 2px solid #22d3ee; padding-bottom: 2px; cursor: default;">Elements</span>
+                    <span style="cursor: not-allowed;">Console</span>
+                    <span style="cursor: not-allowed;">Sources</span>
+                    <span style="cursor: not-allowed;">Network</span>
+                  </div>
+                  
+                  <div style="flex: 1; padding: 10px 15px; overflow-y: auto; line-height: 1.5; color: #8a93a5;">
+                    <div>&lt;<span style="color: #e06c75;">div</span> <span style="color: #d19a66;">class</span>=<span style="color: #98c379;">"weather-card"</span>&gt;</div>
+                    
+                    <div style="padding-left: 15px; border-radius: 3px;" id="code-line-loc" class="code-line" data-target="inspect-loc">
+                      &lt;<span style="color: #e06c75;">div</span> <span style="color: #d19a66;">class</span>=<span style="color: #98c379;">"location"</span>&gt;<span class="code-editable-text" id="code-val-loc" style="color: #ffffff; font-weight: bold; cursor: pointer; border-bottom: 1px dotted #fff;">대한민국 서울</span>&lt;/<span style="color: #e06c75;">div</span>&gt;
+                    </div>
+                    
+                    <div style="padding-left: 15px; border-radius: 3px;" id="code-line-icon" class="code-line" data-target="inspect-icon">
+                      &lt;<span style="color: #e06c75;">div</span> <span style="color: #d19a66;">class</span>=<span style="color: #98c379;">"weather-icon"</span>&gt;<span class="code-editable-text" id="code-val-icon" style="color: #ffffff; font-weight: bold; cursor: pointer; border-bottom: 1px dotted #fff;">☀️</span>&lt;/<span style="color: #e06c75;">div</span>&gt;
+                    </div>
+                    
+                    <div style="padding-left: 15px;">
+                      &lt;<span style="color: #e06c75;">div</span> <span style="color: #d19a66;">class</span>=<span style="color: #98c379;">"temp-container"</span>&gt;
+                    </div>
+                    <div style="padding-left: 30px; border-radius: 3px;" id="code-line-temp" class="code-line" data-target="inspect-temp">
+                      &lt;<span style="color: #e06c75;">span</span> <span style="color: #d19a66;">id</span>=<span style="color: #98c379;">"weather-temp"</span>&gt;<span class="code-editable-text" id="code-val-temp" style="color: #ffffff; font-weight: bold; background: rgba(56,189,248,0.2); padding: 0 4px; border-radius: 2px; cursor: pointer; border-bottom: 1px dotted #fff;">24</span>&lt;/<span style="color: #e06c75;">span</span>&gt;&lt;<span style="color: #e06c75;">span</span> <span style="color: #d19a66;">class</span>=<span style="color: #98c379;">"unit"</span>&gt;°C&lt;/<span style="color: #e06c75;">span</span>&gt;
+                    </div>
+                    <div style="padding-left: 15px;">
+                      &lt;/<span style="color: #e06c75;">div</span>&gt;
+                    </div>
+                    
+                    <div style="padding-left: 15px; border-radius: 3px;" id="code-line-desc" class="code-line" data-target="inspect-desc">
+                      &lt;<span style="color: #e06c75;">div</span> <span style="color: #d19a66;">class</span>=<span style="color: #98c379;">"description"</span>&gt;<span class="code-editable-text" id="code-val-desc" style="color: #ffffff; font-weight: bold; cursor: pointer; border-bottom: 1px dotted #fff;">맑음</span>&lt;/<span style="color: #e06c75;">div</span>&gt;
+                    </div>
+                    
+                    <div>&lt;/<span style="color: #e06c75;">div</span>&gt;
+                  </div>
+                  
+                  <!-- Code Editing Instruction Overlay -->
+                  <div style="position: absolute; right: 10px; bottom: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); color: #8a93a5; padding: 4px 8px; border-radius: 4px; pointer-events: none; font-size: 0.75rem;">
+                    💡 밑줄이 그어진 코드를 <strong>더블클릭</strong>해서 수정한 뒤 엔터를 치세요!
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -1616,10 +1685,16 @@
               <li><i class="fa-solid fa-mouse-pointer"></i> <span><strong>[체험 미션]</strong> 오른쪽 드롭존에 모형 index.html 파일을 끌어서 올려 배포해 보세요!</span></li>
               <li><i class="fa-solid fa-link"></i> <span>배포가 완료되면 고유의 웹 주소와 QR 코드가 발급됩니다.</span></li>
             </ul>
-            <div style="margin-top: 25px;">
+            <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
               <a href="https://app.netlify.com/drop" target="_blank" class="copy-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 230px; background: #00AD9F; color: white;">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Netlify Drop 바로가기
               </a>
+            </div>
+            <!-- Warning Box for Low Grade Netlify Drop limits -->
+            <div style="margin-top: 15px; background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.2); border-radius: 12px; padding: 15px; font-size: 0.85rem; line-height: 1.5; color: #fda4af;">
+              <h5 style="margin-bottom: 6px; font-weight: 700; color: #f43f5e;"><i class="fa-solid fa-triangle-exclamation"></i> 로그인 없이 배포할 때 주의해요!</h5>
+              <p style="margin-bottom: 6px;">❌ <strong>임시 주소 (1시간)</strong>: 회원가입 없이 파일을 올리면 웹페이지 주소가 <strong>1시간만 작동</strong>하고 삭제돼요. 업로드 횟수도 하루에 1번으로 제한됩니다.</p>
+              <p>💡 <strong>꿀팁</strong>: ChatGPT나 Claude의 <strong>미리보기(Preview)</strong> 전체화면 기능으로 친구들에게 바로 보여주거나, 다운로드한 <code>.html</code> 파일을 컴퓨터에서 더블클릭해 오프라인으로 무제한 테스트해 보세요!</p>
             </div>
           </div>
           <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -2237,21 +2312,196 @@
 
 
     // ==========================================
-    // INTERACTIVE WIDGET 1: F12 Weather Simulator
     // ==========================================
-    const weatherContent = document.getElementById('weather-content');
-    const weatherReload = document.getElementById('weather-reload');
+    // INTERACTIVE WIDGET 1: Mock F12 DevTools Simulator
+    // ==========================================
+    const mockF12SelectorBtn = document.getElementById('mock-f12-selector');
+    const weatherReloadBtn = document.getElementById('weather-reload');
+    const mockInspectTooltip = document.getElementById('mock-inspect-tooltip');
+    
+    const inspectableElements = document.querySelectorAll('.inspectable-element');
+    const codeLines = document.querySelectorAll('.code-line');
+    
+    let isSelectorActive = false;
+    let selectedElementId = null;
 
-    weatherReload.addEventListener('click', () => {
-      // Reload the embedded weather iframe to reset changes
-      const iframe = document.getElementById('weather-iframe');
-      if (iframe) {
-        iframe.src = iframe.src;
-      }
+    // Toggle Selector Mode
+    mockF12SelectorBtn.addEventListener('click', () => {
+      isSelectorActive = !isSelectorActive;
+      mockF12SelectorBtn.style.color = isSelectorActive ? '#38bdf8' : '#a1a1aa';
+      mockF12SelectorBtn.style.background = isSelectorActive ? 'rgba(56, 189, 248, 0.15)' : 'transparent';
       
-      // Flash indicator
-      weatherContent.style.opacity = 0.5;
-      setTimeout(() => weatherContent.style.opacity = 1, 300);
+      if (!isSelectorActive) {
+        mockInspectTooltip.style.display = 'none';
+        // Reset outline styles
+        inspectableElements.forEach(el => {
+          el.style.borderColor = 'transparent';
+          el.style.background = 'transparent';
+        });
+      }
+    });
+
+    // Hover effect on inspectable weather elements
+    inspectableElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        if (!isSelectorActive) return;
+        el.style.borderColor = '#38bdf8';
+        el.style.background = 'rgba(56, 189, 248, 0.15)';
+        
+        // Show tooltip
+        const rect = el.getBoundingClientRect();
+        const screenRect = document.getElementById('mock-weather-screen').getBoundingClientRect();
+        const tag = el.getAttribute('data-tag');
+        
+        mockInspectTooltip.innerText = tag;
+        mockInspectTooltip.style.display = 'block';
+        
+        // Position tooltip relative to the weather screen container
+        const leftOffset = rect.left - screenRect.left;
+        const topOffset = rect.top - screenRect.top - 24;
+        mockInspectTooltip.style.left = `${leftOffset}px`;
+        mockInspectTooltip.style.top = `${topOffset}px`;
+      });
+
+      el.addEventListener('mouseleave', () => {
+        if (!isSelectorActive) return;
+        if (selectedElementId !== el.id) {
+          el.style.borderColor = 'transparent';
+          el.style.background = 'transparent';
+        }
+        mockInspectTooltip.style.display = 'none';
+      });
+
+      // Click to select in code panel
+      el.addEventListener('click', () => {
+        if (!isSelectorActive) return;
+        
+        // Reset previously selected highlights
+        inspectableElements.forEach(e => {
+          e.style.borderColor = 'transparent';
+          e.style.background = 'transparent';
+        });
+        codeLines.forEach(l => {
+          l.style.background = 'transparent';
+          l.style.color = '#8a93a5';
+        });
+
+        // Highlight selected weather element
+        el.style.borderColor = '#38bdf8';
+        el.style.background = 'rgba(56, 189, 248, 0.08)';
+        selectedElementId = el.id;
+
+        // Highlight corresponding code line
+        const targetLine = document.querySelector(`.code-line[data-target="${el.id}"]`);
+        if (targetLine) {
+          targetLine.style.background = 'rgba(56, 189, 248, 0.15)';
+          targetLine.style.color = '#ffffff';
+          targetLine.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Turn off selector mode automatically on select
+        isSelectorActive = false;
+        mockF12SelectorBtn.style.color = '#a1a1aa';
+        mockF12SelectorBtn.style.background = 'transparent';
+        mockInspectTooltip.style.display = 'none';
+      });
+    });
+
+    // Double-click edit in code view
+    const codeEditables = document.querySelectorAll('.code-editable-text');
+    codeEditables.forEach(editable => {
+      editable.addEventListener('dblclick', () => {
+        const currentText = editable.innerText;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentText;
+        input.style.background = '#25252b';
+        input.style.border = '1px solid #38bdf8';
+        input.style.color = '#ffffff';
+        input.style.fontFamily = 'monospace';
+        input.style.fontSize = '11px';
+        input.style.padding = '0px 4px';
+        input.style.outline = 'none';
+        input.style.width = '120px';
+        input.style.borderRadius = '2px';
+
+        // Replace text with input
+        editable.innerHTML = '';
+        editable.appendChild(input);
+        input.focus();
+        input.select();
+
+        function saveValue() {
+          const val = input.value.trim();
+          editable.innerHTML = val;
+          
+          // Find matching weather element and update it
+          const line = editable.closest('.code-line');
+          const targetId = line.getAttribute('data-target');
+          const weatherEl = document.getElementById(targetId);
+          if (weatherEl) {
+            weatherEl.innerText = val;
+            
+            // If it is the temperature and has changed, celebrate!
+            if (targetId === 'inspect-temp' && val !== '24') {
+              confetti({
+                particleCount: 50,
+                spread: 60,
+                origin: { y: 0.6 }
+              });
+            }
+          }
+        }
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            saveValue();
+          }
+        });
+
+        input.addEventListener('blur', () => {
+          saveValue();
+        });
+      });
+    });
+
+    // Reload / Reset
+    weatherReloadBtn.addEventListener('click', () => {
+      // Reload icon animation
+      const icon = weatherReloadBtn.querySelector('i');
+      icon.style.transform = 'rotate(360deg)';
+      icon.style.transition = 'transform 0.4s ease';
+      setTimeout(() => {
+        icon.style.transform = 'rotate(0deg)';
+        icon.style.transition = 'none';
+      }, 400);
+
+      // Reset values
+      document.getElementById('inspect-loc').innerText = '대한민국 서울';
+      document.getElementById('inspect-icon').innerText = '☀️';
+      document.getElementById('inspect-temp').innerText = '24';
+      document.getElementById('inspect-desc').innerText = '맑음';
+
+      document.getElementById('code-val-loc').innerText = '대한민국 서울';
+      document.getElementById('code-val-icon').innerText = '☀️';
+      document.getElementById('code-val-temp').innerText = '24';
+      document.getElementById('code-val-desc').innerText = '맑음';
+
+      // Reset styles
+      inspectableElements.forEach(e => {
+        e.style.borderColor = 'transparent';
+        e.style.background = 'transparent';
+      });
+      codeLines.forEach(l => {
+        l.style.background = 'transparent';
+        l.style.color = '#8a93a5';
+      });
+      
+      isSelectorActive = false;
+      selectedElementId = null;
+      mockF12SelectorBtn.style.color = '#a1a1aa';
+      mockF12SelectorBtn.style.background = 'transparent';
+      mockInspectTooltip.style.display = 'none';
     });
 
 
@@ -2280,15 +2530,41 @@
 - 내가 원하는 게임 설명: ${customVal}
 - 게임 점수: 플레이 시간이 길어질수록 점수가 실시간으로 10점씩 올라감
 - 성공/실패 조건: 장애물이나 실패 요건에 부딪히는 순간 게임이 정지되고 '게임 오버! 최종 점수: XX점'을 크게 띄우며, '다시 시작' 버튼이 보여야 함.
-- 디자인: 어두운 우주 테마(#0b0f19)의 예쁜 배경에 알록달록한 네온 효과(Neon Glow)를 주고, 모바일 화면을 위해 화면 아랫부분에 왼쪽/오른쪽 터치 버튼을 추가해줘.`;
+- 디자인: 어두운 우주 테마(#0b0f19)의 예쁜 배경에 알록달록한 네온 효과(Neon Glow)를 주고, 모바일 화면을 위해 화면 아랫부분에 조작할 수 있는 직관적인 터치 버튼들을 추가해줘.`;
       } else {
+        let genreDesc = '';
+        let mechanicDesc = '';
+        let movementDesc = '';
+        let scoreDesc = '';
+        let conditionDesc = '';
+
+        if (selectedGenre === '똥피하기') {
+          genreDesc = '하늘에서 무작위로 떨어지는 장애물들을 피하며 최대한 오래 버티는 회피 게임';
+          movementDesc = `주인공 캐릭터: ${selectedHero} (화면 맨 아래 바닥에 위치하며, 키보드 좌우 방향키로 좌우로만 부드럽게 움직임)`;
+          mechanicDesc = `방해요소/장애물: 하늘에서 아래로 무작위 속도로 떨어지는 ${selectedObstacle} (주인공 캐릭터가 닿으면 게임 오버)`;
+          scoreDesc = '플레이 시간이 길어질수록 점수가 실시간으로 10점씩 올라감';
+          conditionDesc = '장애물에 부딪히는 순간 게임이 정지되고 게임 오버 화면 및 다시 시작 버튼이 보여야 함';
+        } else if (selectedGenre === '러닝 액션') {
+          genreDesc = '화면이 자동으로 흐르며 다가오는 장애물을 점프로 피해 달리는 러닝 점프 게임';
+          movementDesc = `주인공 캐릭터: ${selectedHero} (화면 왼쪽 아래에 서 있으며, 스페이스바나 위쪽 방향키를 누르면 공중으로 점프했다가 물리적인 중력에 의해 부드럽게 바닥으로 떨어짐)`;
+          mechanicDesc = `방해요소/장애물: 화면 오른쪽 끝에서 왼쪽으로 빠른 속도로 미끄러지며 다가오는 ${selectedObstacle} (점프로 뛰어넘어야 하며, 주인공이 닿으면 게임 오버)`;
+          scoreDesc = '장애물을 안전하게 피하고 생존한 시간에 따라 실시간으로 점수가 올라감';
+          conditionDesc = '장애물에 닿는 순간 게임이 정지되고 게임 오버 화면 및 다시 시작 버튼이 보여야 함';
+        } else if (selectedGenre === '벽돌깨기') {
+          genreDesc = '주인공 패들(막대기)로 튕겨 나가는 공을 조종하여 화면 위에 배치된 벽돌을 모두 깨는 게임';
+          movementDesc = `주인공 캐릭터: ${selectedHero} (가로로 긴 막대기 패들이며, 화면 맨 아래쪽에서 키보드 좌우 방향키로 이동해 공을 받아쳐서 튕겨냄)`;
+          mechanicDesc = `파괴할 타겟 벽돌: 화면 상단에 2~3줄로 나열된 ${selectedObstacle} 형태의 벽돌들 (공이 부딪히면 벽돌이 부서지고 파괴됨)`;
+          scoreDesc = '벽돌을 깰 때마다 점수가 실시간으로 100점씩 올라감';
+          conditionDesc = '공이 패들을 놓쳐 바닥에 닿으면 하트(목숨 3개)가 깎이고 목숨을 모두 잃으면 게임 오버. 상단의 벽돌을 다 깨면 스테이지 클리어 메세지와 함께 다시 시작 버튼이 팝업됨';
+        }
+
         template = `HTML, CSS, JS가 모두 한 파일에 들어있는 웹 미니게임을 만들어줘.
-- 게임 장르: ${selectedGenre} 게임
-- 주인공 캐릭터: ${selectedHero} (키보드 방향키로 좌우로 부드럽게 움직임)
-- 방해요소/장애물: 하늘에서 아래로 떨어지는 ${selectedObstacle} (닿으면 게임 오버)
-- 게임 점수: 플레이 시간이 길어질수록 점수가 실시간으로 10점씩 올라감
-- 성공/실패 조건: 장애물에 부딪히는 순간 게임이 정지되고 '게임 오버! 최종 점수: XX점'을 크게 띄우며, '다시 시작' 버튼이 보여야 함.
-- 디자인: 어두운 우주 테마(#0b0f19)의 예쁜 배경에 알록달록한 네온 효과(Neon Glow)를 주고, 모바일 화면을 위해 화면 아랫부분에 왼쪽/오른쪽 터치 버튼을 추가해줘.`;
+- 게임 장르 및 규칙: ${genreDesc}
+- ${movementDesc}
+- ${mechanicDesc}
+- 게임 점수 규칙: ${scoreDesc}
+- 성공/실패 조건: ${conditionDesc}
+- 디자인: 어두운 우주 테마(#0b0f19)의 예쁜 배경에 알록달록한 네온 효과(Neon Glow)를 주고, 모바일 화면을 위해 화면 아랫부분에 조작할 수 있는 직관적인 터치 버튼들을 추가해줘.`;
       }
 
       promptOutput.value = template;
