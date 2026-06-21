@@ -17,18 +17,19 @@ export async function onRequest(context) {
     try {
       const formData = await request.formData();
       const password = formData.get("password");
+      const to = url.searchParams.get("to") || "/";
       
       if (password === CORRECT_PASSWORD) {
-        // Redirect back to home with the secure HttpOnly cookie
+        // Redirect back to original destination or home with the secure HttpOnly cookie
         return new Response(null, {
           status: 302,
           headers: {
-            "Location": "/",
+            "Location": to,
             "Set-Cookie": `${sessionCookieName}=${expectedToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000`, // 30 days session
           },
         });
       } else {
-        return renderLoginPage("비밀번호가 올바르지 않습니다.");
+        return renderLoginPage("비밀번호가 올바르지 않습니다.", to);
       }
     } catch (e) {
       return new Response("Invalid form submission", { status: 400 });
@@ -37,14 +38,14 @@ export async function onRequest(context) {
   
   // Serve login page if not authenticated
   if (!isAuthenticated && url.pathname !== "/login") {
-    return renderLoginPage();
+    return renderLoginPage("", url.pathname + url.search);
   }
   
   // Proceed to static files
   return context.next();
 }
 
-function renderLoginPage(errorMessage = "") {
+function renderLoginPage(errorMessage = "", redirectUrl = "/") {
   const errorHtml = errorMessage 
     ? `<div class="error-msg"><i class="fa-solid fa-triangle-exclamation"></i> ${errorMessage}</div>` 
     : "";
@@ -291,7 +292,7 @@ function renderLoginPage(errorMessage = "") {
       
       ${errorHtml}
       
-      <form action="/login" method="POST">
+      <form action="/login?to=${encodeURIComponent(redirectUrl)}" method="POST">
         <div class="input-group">
           <i class="fa-solid fa-key"></i>
           <input type="password" name="password" placeholder="비밀번호 입력" required autofocus>
