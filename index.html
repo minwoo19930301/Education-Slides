@@ -386,6 +386,17 @@
       border-color: var(--color-secondary);
     }
 
+    .card:nth-child(7) .download-link {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.2);
+      color: var(--color-accent);
+    }
+    .card:nth-child(7) .download-link:hover {
+      background: var(--color-accent);
+      color: #000000;
+      border-color: var(--color-accent);
+    }
+
     /* Hyperlinks Section */
     .card-links-section {
       display: flex;
@@ -449,6 +460,15 @@
     .card:nth-child(6) .link-item:hover {
       background: rgba(168, 85, 247, 0.1);
       border-color: rgba(168, 85, 247, 0.3);
+      color: #ffffff;
+    }
+
+    .card:nth-child(7) .link-item {
+      color: var(--color-accent);
+    }
+    .card:nth-child(7) .link-item:hover {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.3);
       color: #ffffff;
     }
 
@@ -633,6 +653,37 @@
         <div class="card-actions">
           <div class="card-downloads">
             <a href="downloads/portfolio-presentation.pptx" download class="download-link"><i class="fa-solid fa-file-powerpoint"></i> PPTX 원본 다운로드</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 7: Frontend & Figma Slides -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-badge badge-static" style="background: rgba(244, 63, 94, 0.1); color: var(--color-accent); border-color: rgba(244, 63, 94, 0.2);">Static PPTX Deck</div>
+          <h3 class="card-title">프론트엔드 개발 입문 & Figma 실습</h3>
+          <p class="card-desc">
+            웹의 기본 동작 원리와 브라우저 렌더링, HTML/CSS 필수 개념부터 Figma 디자인 도구 사용법 및 Vanilla JS, React, Next.js 프론트엔드 로드맵을 다루는 발표 자료입니다.
+          </p>
+          <div class="card-meta">
+            <div class="meta-item"><i class="fa-solid fa-list" style="color: var(--color-accent)"></i> <span>56 Slides</span></div>
+            <div class="meta-item"><i class="fa-solid fa-laptop-code" style="color: var(--color-accent)"></i> <span>프론트엔드 & 디자인</span></div>
+          </div>
+          
+          <div class="card-links-section">
+            <div class="links-title"><i class="fa-solid fa-link"></i> 주요 참고 링크</div>
+            <div class="links-grid">
+              <a href="https://www.figma.com/make/4cI6K7B8xUnwI9ECfMWxye/Flashcard-Study-App?t=Y4AcF8bxjTqqGyyH-0" target="_blank" class="link-item" title="Figma 실습 파일"><i class="fa-brands fa-figma"></i> Figma 실습</a>
+              <a href="https://minwoo19930301.github.io/seoul-flight-game/index-seoul-flight.html" target="_blank" class="link-item" title="웹 비행 게임 데모"><i class="fa-solid fa-gamepad"></i> 웹 게임 데모</a>
+              <a href="https://minwoo19930301.github.io/trip-plans/" target="_blank" class="link-item" title="웹 포트폴리오 데모"><i class="fa-solid fa-plane"></i> 웹 여행 계획</a>
+              <a href="https://chromewebstore.google.com/detail/web-change-alert/jcfhchhliffpofclnhhjjdjakinpmfmc" target="_blank" class="link-item" title="크롬 확장 프로그램"><i class="fa-brands fa-chrome"></i> 크롬 Alert</a>
+              <a href="https://padlet.com/minwookim920/padlet-j7t1rvqzmqcbeezr" target="_blank" class="link-item" title="수업 패들렛"><i class="fa-solid fa-clipboard-list"></i> 수업 패들렛</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <div class="card-downloads">
+            <a href="downloads/frontend-presentation.pptx" download class="download-link"><i class="fa-solid fa-file-powerpoint"></i> PPTX 원본 다운로드</a>
           </div>
         </div>
       </div>
