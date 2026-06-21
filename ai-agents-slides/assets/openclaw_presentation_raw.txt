@@ -1,6 +1,6 @@
 # G마켓의 미래 고객은 사람이 아니라 AI?
 맥미니와 오픈클로로 만든 개인 비서
-Pricing Engineering 김민우
+Pricing Engineering
 
 ---
 
